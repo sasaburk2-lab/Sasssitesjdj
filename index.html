@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Цветное Фрисби — Эпоха Ловли | долгая физическая игра</title>
+    <title>Block Blast — Цветные блоки | стратегическая головоломка</title>
     <style>
         * {
             user-select: none;
@@ -14,133 +14,129 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: radial-gradient(circle at 30% 10%, #0a1f2e, #03070f);
+            background: linear-gradient(135deg, #0a1a2a 0%, #0a0f1a 100%);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', 'Poppins', 'Orbitron', monospace;
+            font-family: 'Segoe UI', 'Poppins', system-ui, monospace;
             padding: 20px;
         }
 
-        /* Главный контейнер — как арена для фрисби */
-        .frisbee-arena {
-            background: rgba(0, 20, 30, 0.55);
-            backdrop-filter: blur(4px);
-            border-radius: 68px;
-            padding: 18px 22px 25px 22px;
-            box-shadow: 0 35px 55px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1);
-            border: 1px solid rgba(0, 255, 200, 0.35);
+        .game-container {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            border-radius: 56px;
+            padding: 20px 25px 28px 25px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(100, 200, 255, 0.3);
         }
 
         canvas {
             display: block;
             margin: 0 auto;
-            border-radius: 42px;
-            box-shadow: 0 0 0 4px rgba(255, 180, 60, 0.4), 0 20px 40px rgba(0,0,0,0.5);
-            cursor: crosshair;
-            background: radial-gradient(ellipse at 30% 40%, #142c3c, #021016);
+            border-radius: 24px;
+            box-shadow: 0 0 0 3px rgba(255,200,80,0.3), 0 15px 30px rgba(0,0,0,0.4);
+            cursor: pointer;
+            background-color: #0e1622;
         }
 
-        /* Панель управления — спортивный стиль */
-        .score-panel {
-            margin-top: 22px;
+        .info-bar {
+            margin-top: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
             background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(12px);
-            padding: 10px 28px;
-            border-radius: 60px;
-            border: 1px solid rgba(0, 230, 200, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 10px 24px;
+            border-radius: 48px;
+            border: 1px solid rgba(0, 210, 200, 0.4);
         }
 
-        .stat-block {
-            background: #07121ec9;
+        .stat {
+            background: #0a111fd9;
             padding: 6px 20px;
-            border-radius: 3rem;
+            border-radius: 40px;
             font-weight: bold;
             letter-spacing: 1px;
-            color: #e2f0ff;
-            text-shadow: 0 0 3px cyan;
-            font-size: 1.1rem;
+            color: #eef5ff;
+            font-size: 1rem;
             display: flex;
             gap: 12px;
             align-items: baseline;
             font-family: 'Orbitron', monospace;
         }
 
-        .stat-block span:first-child {
+        .stat span:first-child {
             color: #6efff0;
             font-size: 0.8rem;
         }
 
-        .stat-block span:last-child {
-            font-size: 1.7rem;
+        .stat span:last-child {
+            font-size: 1.8rem;
             font-weight: 800;
             color: #ffdd99;
         }
 
-        .button-cluster {
+        .buttons {
             display: flex;
             gap: 15px;
         }
 
-        .action-btn {
-            background: linear-gradient(145deg, #1a2c3c, #0a121f);
+        .btn {
+            background: linear-gradient(135deg, #1e2f3f, #0a121f);
             border: none;
             padding: 8px 24px;
             border-radius: 40px;
             font-family: 'Orbitron', monospace;
             font-weight: bold;
-            color: #c0ffff;
-            font-size: 0.95rem;
+            color: #bbffff;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: 0.2s;
             box-shadow: 0 3px 8px black;
-            border: 1px solid #2d7f8a;
+            border: 1px solid #2c7f8a;
         }
 
-        .action-btn:hover {
+        .btn:hover {
             transform: scale(1.02);
-            background: #1f4055;
+            background: #2a4558;
             color: white;
             border-color: gold;
-            box-shadow: 0 0 12px aqua;
+            box-shadow: 0 0 12px cyan;
         }
 
-        .complexity-tag {
-            background: #010d15;
-            padding: 6px 22px;
-            border-radius: 2rem;
-            font-size: 0.85rem;
+        .next-label {
+            background: #07121ec9;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
             font-weight: bold;
-            color: #bbffdd;
+            color: #aaffdd;
             font-family: monospace;
             letter-spacing: 1px;
         }
 
-        @media (max-width: 720px) {
-            .stat-block span:last-child { font-size: 1.2rem; }
-            .stat-block { padding: 4px 12px; }
-            .action-btn { padding: 5px 14px; font-size: 0.7rem; }
-            .score-panel { justify-content: center; }
+        @media (max-width: 700px) {
+            .stat span:last-child { font-size: 1.2rem; }
+            .stat { padding: 4px 12px; }
+            .btn { padding: 5px 14px; font-size: 0.7rem; }
+            .info-bar { justify-content: center; }
         }
     </style>
 </head>
 <body>
 <div>
-    <div class="frisbee-arena">
-        <canvas id="gameCanvas" width="1100" height="650" style="width:100%; height:auto; max-width:1100px; aspect-ratio:1100/650"></canvas>
-        <div class="score-panel">
-            <div class="stat-block"><span>🏆 ОЧКИ ЛОВКОСТИ</span> <span id="catchScore">0</span></div>
-            <div class="stat-block"><span>🌀 РАУНД ЭЙРА</span> <span id="waveLevel">1</span></div>
-            <div class="stat-block"><span>⚡ ЦВЕТОВОЙ РИТМ</span> <span id="rhythmBonus">1.0x</span></div>
-            <div class="complexity-tag" id="eraName">ЭПОХА СТАРТА</div>
-            <div class="button-cluster">
-                <button class="action-btn" id="resetBtn">♻️ НОВАЯ ИГРА</button>
-                <button class="action-btn" id="infoBtn">📜 ЗНАНИЕ ПОЛЁТА</button>
+    <div class="game-container">
+        <canvas id="boardCanvas" width="450" height="450" style="width:100%; height:auto; max-width:450px; aspect-ratio:1/1"></canvas>
+        <div class="info-bar">
+            <div class="stat"><span>ОЧКИ</span> <span id="scoreDisplay">0</span></div>
+            <div class="stat"><span>СЧЁТ</span> <span id="comboDisplay">0</span></div>
+            <div class="next-label">СЛЕДУЮЩИЕ БЛОКИ</div>
+            <div class="buttons">
+                <button class="btn" id="resetBtn">НОВАЯ ИГРА</button>
+                <button class="btn" id="helpBtn">ПРАВИЛА</button>
             </div>
         </div>
     </div>
@@ -148,423 +144,383 @@
 
 <script>
     (function(){
-        // ----------------------------------------------------------------
-        // ИГРА: ЦВЕТНОЕ ФРИСБИ — ДОЛГАЯ ФИЗИЧЕСКАЯ ЭПОПЕЯ
-        // Механика: по арене летают цветные диски (фрисби) с физикой отскока.
-        // Игрок кликает (ловит) диски → каждый пойманный диск даёт очки,
-        // плюс активирует познавательные фразы о цветах. Прогрессия бесконечная:
-        // каждые +150 очков новый «раунд эйра» — скорость полёта растёт,
-        // размер дисков может меняться, появляются новые цвета.
-        // Есть система комбо: если ловить быстро подряд — множитель растёт.
-        // Долгая игра с нарастающей сложностью, физика отскока, эффекты.
-        // ----------------------------------------------------------------
-
-        const canvas = document.getElementById('gameCanvas');
+        // ------------------------------------------------------------------
+        // ИГРА: BLOCK BLAST (БЛОК БАСТЕР)
+        // Классическая головоломка: поле 8x8, три предлагаемых блока.
+        // Игрок перетаскивает (или кликает) блоки на поле. При заполнении строк/столбцов — очистка и очки.
+        // Безграничная игра, долгая прогрессия: сложность растёт через новые формы блоков.
+        // ------------------------------------------------------------------
+        
+        const canvas = document.getElementById('boardCanvas');
         const ctx = canvas.getContext('2d');
-
-        let width = 1100, height = 650;
-        canvas.width = width;
-        canvas.height = height;
-
-        // ----- ПАРАМЕТРЫ ДОЛГОЙ ИГРЫ -----
-        let score = 0;
-        let wave = 1;            // раунд (уровень сложности)
-        let comboMultiplier = 1.0;
-        let lastCatchFrame = 0;
-        let frameCounter = 0;
         
-        // список активных дисков (фрисби)
-        let discs = [];
+        let size = 8;            // поле 8x8
+        let cellSize = 450 / size; // 56.25px
         
-        // базовая скорость при wave = 1
-        let baseSpeed = 1.2;
+        let grid = Array(size).fill().map(() => Array(size).fill(null)); // null = пусто, иначе цветовой индекс
         
-        // максимальное количество дисков на поле (плавно растёт)
-        let maxDiscs = 3;
-        
-        // цветовая палитра (расширяемая с ростом волны)
-        const colorLibrary = [
-            { name: "Лазурный", code: "#3a86ff", wisdom: "Лазурный фрисби — поток ясности, укрепляет концентрацию." },
-            { name: "Изумрудный", code: "#2ecc71", wisdom: "Изумрудный диск дарит равновесие и природную гармонию." },
-            { name: "Алый", code: "#e74c3c", wisdom: "Алый цвет — энергия рывка, реакция становится острее." },
-            { name: "Золотой", code: "#f1c40f", wisdom: "Золотой фрисби — символ мастерства и интуиции." },
-            { name: "Огненный", code: "#e67e22", wisdom: "Огненный диск разжигает страсть к победе." },
-            { name: "Аметист", code: "#9b59b6", wisdom: "Аметистовый полёт углубляет мудрость движений." },
-            { name: "Розовый закат", code: "#ff66b2", wisdom: "Оттенок эмпатии, учит читать траектории." },
-            { name: "Бронза", code: "#cd7f32", wisdom: "Бронзовый диск — надёжность и упорство." },
-            { name: "Серебряный бриз", code: "#b0c4de", wisdom: "Серебряный развивает стратегическое мышление." },
-            { name: "Платиновый", code: "#e5e4e2", wisdom: "Платина — вершина ловкости, холодный расчёт." },
-            { name: "Чёрный опал", code: "#2d2d2d", wisdom: "Опал хранит тайны непредсказуемых отскоков." },
-            { name: "Жемчужный", code: "#fdf5e6", wisdom: "Жемчуг дарит чистоту восприятия траектории." },
-            { name: "Индиго", code: "#4b0082", wisdom: "Индиго усиливает воображение и предвидение." },
-            { name: "Янтарный", code: "#FFBF69", wisdom: "Янтарь — древняя мудрость ритма." },
-            { name: "Коралловый риф", code: "#f97f51", wisdom: "Коралл учит адаптироваться к переменам." },
-            { name: "Мятный шторм", code: "#55efc4", wisdom: "Мятный диск приносит свежесть решений." }
+        // Библиотека цветов блоков (яркие, приятные)
+        const colorPalette = [
+            "#3a86ff", "#2ecc71", "#e74c3c", "#f1c40f", "#e67e22",
+            "#9b59b6", "#ff66b2", "#1abc9c", "#e84393", "#3498db",
+            "#f39c12", "#2c3e50", "#16a085", "#c0392b", "#8e44ad"
         ];
         
-        // сколько цветов доступно в текущей волне (волна открывает новые)
-        let availableColorsCount = 3;  // старт с 3 цветов
+        // ----- ФОРМЫ БЛОКОВ (БЛОКИ РАЗНЫХ ФОРМ, КАК В BLOCK BLAST) -----
+        // Каждая фигура — массив координат [row, col] относительно якоря (0,0)
+        const blockShapes = [
+            { shape: [[0,0]], name: "моноблок", cells:1 },                      // 1x1
+            { shape: [[0,0],[0,1]], name: "горизонталь 2", cells:2 },           // 1x2
+            { shape: [[0,0],[1,0]], name: "вертикаль 2", cells:2 },             // 2x1
+            { shape: [[0,0],[0,1],[0,2]], name: "линия 3 гор", cells:3 },       // 1x3
+            { shape: [[0,0],[1,0],[2,0]], name: "линия 3 верт", cells:3 },      // 3x1
+            { shape: [[0,0],[0,1],[1,0]], name: "уголок L", cells:3 },          // L-тримино
+            { shape: [[0,0],[1,0],[1,1]], name: "угол зеркальный", cells:3 },
+            { shape: [[0,0],[0,1],[1,1]], name: "угол обратный", cells:3 },
+            { shape: [[0,0],[1,0],[0,1],[1,1]], name: "квадрат 2x2", cells:4 }, // блок 2x2
+            { shape: [[0,0],[0,1],[0,2],[1,1]], name: "Т-образный", cells:4 },
+            { shape: [[0,0],[1,0],[2,0],[2,1]], name: "L большой", cells:4 },
+            { shape: [[0,0],[0,1],[0,2],[1,0]], name: "змейка", cells:4 },
+            { shape: [[0,0],[0,1],[1,1],[1,2]], name: "зигзаг", cells:4 }
+        ];
         
-        function getActiveColors() {
-            let maxColors = Math.min(availableColorsCount, colorLibrary.length);
-            return colorLibrary.slice(0, maxColors);
+        // Игровые параметры
+        let currentBlocks = [];   // массив из 3х объектов { shapeIndex, colorIndex, shapeMatrix }
+        let score = 0;
+        let totalCleared = 0;     // для счёта, сколько линий очищено
+        
+        let gameOverFlag = false;
+        
+        // Для выбора блока (активный блок для размещения)
+        let selectedBlockIndex = -1;
+        let hoverCell = null;      // { row, col }
+        
+        // Всплывающие уведомления
+        let toastMessage = "";
+        let toastTimer = 0;
+        
+        function showMessage(msg, duration = 1800) {
+            toastMessage = msg;
+            toastTimer = 40;
+            setTimeout(() => { if(toastMessage === msg) toastMessage = ""; }, duration);
         }
         
-        // обновление доступных цветов в зависимости от волны (долгое открытие)
-        function updateColorsByWave() {
-            // каждые 2 волны +1 новый цвет, вплоть до максимума
-            let newCount = 3 + Math.floor(wave / 2);
-            if(newCount > colorLibrary.length) newCount = colorLibrary.length;
-            availableColorsCount = newCount;
-        }
-        
-        // функция генерации нового диска с физикой
-        function createDisc(avoidOverlap = true) {
-            const activeColors = getActiveColors();
-            if(activeColors.length === 0) return null;
-            const colorIndex = Math.floor(Math.random() * activeColors.length);
-            const discColor = activeColors[colorIndex];
-            
-            // радиус: от 22 до 38, с уменьшением на высоких волнах (чуть сложнее)
-            let radius = 26 - Math.min(8, Math.floor(wave / 8));
-            if(radius < 16) radius = 16;
-            
-            let x, y, overlap = true;
-            let attempts = 0;
-            while(overlap && attempts < 40) {
-                x = radius + Math.random() * (width - radius * 2);
-                y = radius + Math.random() * (height - radius * 2);
-                overlap = false;
-                if(avoidOverlap) {
-                    for(let d of discs) {
-                        const dx = d.x - x;
-                        const dy = d.y - y;
-                        const dist = Math.hypot(dx, dy);
-                        if(dist < (d.radius + radius + 18)) {
-                            overlap = true;
-                            break;
-                        }
-                    }
-                }
-                attempts++;
+        // Получить случайную форму блока
+        function getRandomBlock() {
+            const idx = Math.floor(Math.random() * blockShapes.length);
+            const shapeData = blockShapes[idx];
+            const colorIdx = Math.floor(Math.random() * colorPalette.length);
+            // Создаём матрицу формы для упрощённой проверки
+            const maxRow = Math.max(...shapeData.shape.map(p => p[0]));
+            const maxCol = Math.max(...shapeData.shape.map(p => p[1]));
+            let matrix = Array(maxRow+1).fill().map(() => Array(maxCol+1).fill(false));
+            for(let p of shapeData.shape) {
+                matrix[p[0]][p[1]] = true;
             }
-            
-            // скорость зависит от волны + случайный вектор
-            let spd = baseSpeed + (wave - 1) * 0.35;
-            if(spd > 6.2) spd = 6.2;
-            let angle = Math.random() * Math.PI * 2;
-            let vx = Math.cos(angle) * (spd + Math.random() * 1.2);
-            let vy = Math.sin(angle) * (spd + Math.random() * 1.2);
-            
             return {
-                x: x, y: y, radius: radius,
-                vx: vx, vy: vy,
-                colorCode: discColor.code,
-                colorName: discColor.name,
-                wisdom: discColor.wisdom,
-                colorIndex: colorIndex
+                shapeIndex: idx,
+                colorIndex: colorIdx,
+                shapeData: shapeData.shape,
+                matrix: matrix,
+                width: maxCol+1,
+                height: maxRow+1,
+                cellsCount: shapeData.cells
             };
         }
         
-        // наполнение арены дисками
-        function populateDiscs() {
-            discs = [];
-            let targetCount = maxDiscs + Math.floor(wave / 5);
-            if(targetCount > 12) targetCount = 12;
-            for(let i=0; i<targetCount; i++) {
-                let disc = createDisc(true);
-                if(disc) discs.push(disc);
-            }
-            if(discs.length === 0 && targetCount>0) {
-                discs.push(createDisc(false));
+        // Инициализация новой партии блоков (три штуки)
+        function generateNewBlocks() {
+            currentBlocks = [];
+            for(let i=0; i<3; i++) {
+                currentBlocks.push(getRandomBlock());
             }
         }
         
-        // физика отскока от стен + границы
-        function updatePhysics() {
-            for(let d of discs) {
-                d.x += d.vx;
-                d.y += d.vy;
-                // отскок от границ с сохранением энергии
-                if(d.x - d.radius <= 0) { d.x = d.radius; d.vx = -d.vx; }
-                if(d.x + d.radius >= width) { d.x = width - d.radius; d.vx = -d.vx; }
-                if(d.y - d.radius <= 0) { d.y = d.radius; d.vy = -d.vy; }
-                if(d.y + d.radius >= height) { d.y = height - d.radius; d.vy = -d.vy; }
-                
-                // лёгкое трение для стабильности (почти незаметно)
-                d.vx *= 0.999;
-                d.vy *= 0.999;
+        // Проверка возможности размещения блока на поле
+        function canPlaceBlock(block, topRow, leftCol) {
+            for(let cell of block.shapeData) {
+                const r = topRow + cell[0];
+                const c = leftCol + cell[1];
+                if(r < 0 || r >= size || c < 0 || c >= size) return false;
+                if(grid[r][c] !== null) return false;
             }
+            return true;
         }
         
-        // Обработка ловли (клик по диску) -> главная механика фрисби
-        let lastComboTime = 0;
-        let comboCounter = 0;
-        
-        function catchDisc(disc, mouseX, mouseY) {
-            // проверка попадания по радиусу
-            const dx = disc.x - mouseX;
-            const dy = disc.y - mouseY;
-            const dist = Math.hypot(dx, dy);
-            if(dist <= disc.radius) {
-                // ловля!
-                let currentFrame = frameCounter;
-                if(currentFrame - lastComboTime < 35) {  // быстрая серия
-                    comboCounter++;
-                    if(comboCounter > 12) comboCounter = 12;
-                    comboMultiplier = 1.0 + (comboCounter * 0.12);
-                } else {
-                    comboCounter = 1;
-                    comboMultiplier = 1.12;
+        // Размещение блока на поле
+        function placeBlock(blockIndex, row, col) {
+            if(gameOverFlag) return false;
+            if(selectedBlockIndex === -1) return false;
+            const block = currentBlocks[selectedBlockIndex];
+            if(!block) return false;
+            if(canPlaceBlock(block, row, col)) {
+                // размещаем
+                for(let cell of block.shapeData) {
+                    const r = row + cell[0];
+                    const c = col + cell[1];
+                    grid[r][c] = block.colorIndex;
                 }
-                lastComboTime = currentFrame;
+                // удаляем использованный блок
+                currentBlocks.splice(selectedBlockIndex, 1);
+                // добавляем новый блок в конец
+                currentBlocks.push(getRandomBlock());
+                selectedBlockIndex = -1;
                 
-                let baseReward = 10 + Math.floor(wave * 1.2);
-                let finalReward = Math.floor(baseReward * comboMultiplier);
-                score += finalReward;
+                // после размещения проверяем заполненные линии (строки и столбцы)
+                let cleared = clearFullLinesAndColumns();
+                if(cleared > 0) {
+                    totalCleared += cleared;
+                    // начисление очков: за каждую линию 25 * (количество линий в группе)
+                    let pointsEarned = cleared * 25;
+                    if(cleared >= 3) pointsEarned = Math.floor(pointsEarned * 1.5);
+                    if(cleared >= 5) pointsEarned = Math.floor(pointsEarned * 2);
+                    score += pointsEarned;
+                    showMessage(`+${pointsEarned} очков! Очищено ${cleared} линий`);
+                }
                 
-                // Обновляем отображение множителя
-                document.getElementById('rhythmBonus').innerText = comboMultiplier.toFixed(1) + "x";
-                
-                // показываем познавательную мудрость с эффектом
-                showFloatingWisdom(`+${finalReward} | ${disc.wisdom}`, disc.x, disc.y-12);
-                
-                // увеличиваем счётчик, проверяем повышение волны
-                updateWaveProgression();
-                
-                // удаляем пойманный диск и создаём новый на его месте (бесконечный поток)
-                const index = discs.indexOf(disc);
-                if(index !== -1) {
-                    discs.splice(index, 1);
-                    let newDisc = createDisc(true);
-                    if(newDisc) discs.push(newDisc);
-                    else {
-                        // подстраховка
-                        discs.push(createDisc(false));
+                // проверим, есть ли доступные ходы у игрока
+                if(!hasAnyPossibleMove()) {
+                    gameOverFlag = true;
+                    showMessage("ИГРА ОКОНЧЕНА! Нажмите НОВАЯ ИГРА");
+                }
+                updateUI();
+                return true;
+            } else {
+                showMessage("Нельзя разместить блок здесь!");
+                return false;
+            }
+        }
+        
+        // Очистка полностью заполненных строк и столбцов (как в Block Blast)
+        function clearFullLinesAndColumns() {
+            let rowsToClear = [];
+            let colsToClear = [];
+            // проверка строк
+            for(let r=0; r<size; r++) {
+                let full = true;
+                for(let c=0; c<size; c++) {
+                    if(grid[r][c] === null) { full = false; break; }
+                }
+                if(full) rowsToClear.push(r);
+            }
+            // проверка столбцов
+            for(let c=0; c<size; c++) {
+                let full = true;
+                for(let r=0; r<size; r++) {
+                    if(grid[r][c] === null) { full = false; break; }
+                }
+                if(full) colsToClear.push(c);
+            }
+            // очищаем строки
+            for(let r of rowsToClear) {
+                for(let c=0; c<size; c++) grid[r][c] = null;
+            }
+            // очищаем столбцы
+            for(let c of colsToClear) {
+                for(let r=0; r<size; r++) grid[r][c] = null;
+            }
+            let totalClearedLines = rowsToClear.length + colsToClear.length;
+            if(totalClearedLines > 0) {
+                // Дополнительная анимация: просто сообщение
+            }
+            return totalClearedLines;
+        }
+        
+        // Проверяем, есть ли хотя бы одно место для любого из трёх блоков
+        function hasAnyPossibleMove() {
+            for(let idx=0; idx<currentBlocks.length; idx++) {
+                const block = currentBlocks[idx];
+                for(let r=0; r<size; r++) {
+                    for(let c=0; c<size; c++) {
+                        if(canPlaceBlock(block, r, c)) return true;
                     }
                 }
-                return true;
             }
             return false;
         }
         
-        // долгая прогрессия волн (раундов)
-        function updateWaveProgression() {
-            let newWave = 1 + Math.floor(score / 180);
-            if(newWave < 1) newWave = 1;
-            if(newWave > wave) {
-                wave = newWave;
-                // при повышении волны увеличиваем сложность, обновляем палитру
-                updateColorsByWave();
-                // увеличиваем максимальное количество дисков плавно
-                let newMaxDiscs = 3 + Math.floor(wave / 4);
-                if(newMaxDiscs > 12) newMaxDiscs = 12;
-                maxDiscs = newMaxDiscs;
-                // подстраиваем количество дисков под новый максимум
-                while(discs.length < maxDiscs && discs.length < 14) {
-                    let nd = createDisc(true);
-                    if(nd) discs.push(nd);
-                }
-                // иногда удаляем лишние, если перебор
-                while(discs.length > maxDiscs + 2) discs.pop();
-                
-                // обновление текста эпохи
-                let eraText = "ЭПОХА СТАРТА";
-                if(wave>=3 && wave<7) eraText = "ВЕТРЕНЫЙ РАУНД";
-                else if(wave>=7 && wave<12) eraText = "ТУРБУЛЕНТНОСТЬ";
-                else if(wave>=12 && wave<20) eraText = "МАСТЕРСКАЯ ЛОВЛЯ";
-                else if(wave>=20) eraText = "ЛЕГЕНДАРНЫЙ ПОЛЁТ";
-                document.getElementById('eraName').innerText = eraText;
-                
-                // визуальное уведомление
-                showToastMessage(`НОВЫЙ РАУНД ${wave}! Скорость повышена. Доступно цветов: ${availableColorsCount}`);
-            }
-            document.getElementById('waveLevel').innerText = wave;
-        }
-        
-        // всплывающие сообщения (познавательные)
-        let activePopups = [];
-        function showFloatingWisdom(text, x, y) {
-            activePopups.push({ text: text, x: x, y: y, life: 85 });
-        }
-        
-        function showToastMessage(msg, duration = 2100) {
-            let toastDiv = document.getElementById('dynamicToast');
-            if(!toastDiv) {
-                toastDiv = document.createElement('div');
-                toastDiv.id = 'dynamicToast';
-                toastDiv.style.position = 'fixed';
-                toastDiv.style.bottom = '40px';
-                toastDiv.style.left = '50%';
-                toastDiv.style.transform = 'translateX(-50%)';
-                toastDiv.style.background = '#0e1f2cee';
-                toastDiv.style.backdropFilter = 'blur(12px)';
-                toastDiv.style.borderLeft = '5px solid #f5b042';
-                toastDiv.style.padding = '12px 28px';
-                toastDiv.style.borderRadius = '60px';
-                toastDiv.style.fontFamily = 'monospace';
-                toastDiv.style.fontWeight = 'bold';
-                toastDiv.style.color = '#f0fcff';
-                toastDiv.style.zIndex = '2000';
-                toastDiv.style.fontSize = '0.9rem';
-                toastDiv.style.whiteSpace = 'nowrap';
-                toastDiv.style.pointerEvents = 'none';
-                document.body.appendChild(toastDiv);
-            }
-            toastDiv.style.opacity = '0';
-            toastDiv.textContent = msg;
-            toastDiv.style.opacity = '1';
-            setTimeout(() => {
-                if(toastDiv) toastDiv.style.opacity = '0';
-            }, duration);
-        }
-        
-        // отрисовка всего: красочные фрисби-диски, тени, градиенты
-        function draw() {
-            ctx.clearRect(0, 0, width, height);
-            
-            // стилизованное поле (линии травы/арены)
-            ctx.save();
-            for(let i=0; i<width+height; i+=40) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i+20, height);
-                ctx.strokeStyle = "rgba(30, 180, 210, 0.08)";
-                ctx.stroke();
-            }
-            // круги в центре
-            ctx.beginPath();
-            ctx.arc(width/2, height/2, 120, 0, Math.PI*2);
-            ctx.strokeStyle = "rgba(255,200,100,0.35)";
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            for(let d of discs) {
-                // тень диска
-                ctx.shadowColor = "rgba(0,0,0,0.5)";
-                ctx.shadowBlur = 10;
-                // градиент для объёма, как у фрисби
-                let grad = ctx.createRadialGradient(d.x-5, d.y-5, 5, d.x, d.y, d.radius);
-                grad.addColorStop(0, d.colorCode);
-                grad.addColorStop(1, this.shadeColor? this.shadeColor(d.colorCode, -20) : d.colorCode);
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(d.x, d.y, d.radius, 0, Math.PI*2);
-                ctx.fill();
-                ctx.strokeStyle = "rgba(255,245,180,0.7)";
-                ctx.lineWidth = 1.8;
-                ctx.stroke();
-                // внутренний ободок
-                ctx.beginPath();
-                ctx.arc(d.x, d.y, d.radius-4, 0, Math.PI*2);
-                ctx.strokeStyle = "rgba(255,255,210,0.5)";
-                ctx.stroke();
-                // маленький блик
-                ctx.beginPath();
-                ctx.arc(d.x-4, d.y-4, 5, 0, Math.PI*2);
-                ctx.fillStyle = "rgba(255,255,245,0.3)";
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-            
-            // отрисовка всплывающей мудрости
-            for(let i=0; i<activePopups.length; i++) {
-                let p = activePopups[i];
-                ctx.font = "bold 15px 'Segoe UI', 'Orbitron', monospace";
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = `rgba(255, 240, 180, ${Math.min(1, p.life/40)})`;
-                ctx.shadowColor = "black";
-                ctx.fillText(p.text, p.x-70, p.y - p.life/2);
-                p.life -= 2.2;
-                p.y -= 0.8;
-                if(p.life <= 0) activePopups.splice(i,1);
-            }
-            ctx.restore();
-            
-            // дополнительная информация в углу
-            ctx.font = "12px monospace";
-            ctx.fillStyle = "#aaf0ff";
-            ctx.shadowBlur = 0;
-            ctx.fillText("кликни по любому диску — поймай фрисби", 20, 35);
-            ctx.fillText(`цветов в игре: ${availableColorsCount}`, width-180, 40);
-        }
-        
-        // утилита затемнения цвета (приведение к стилю)
-        function shadeColor(col, amt) {
-            return col; // упрощённо, но оставим для градиента
-        }
-        
-        // инициализация игры (полный сброс)
-        function initGame() {
+        // Перезапуск игры
+        function resetGame() {
+            grid = Array(size).fill().map(() => Array(size).fill(null));
             score = 0;
-            wave = 1;
-            comboMultiplier = 1.0;
-            comboCounter = 0;
-            lastComboTime = 0;
-            availableColorsCount = 3;
-            baseSpeed = 1.2;
-            maxDiscs = 3;
-            document.getElementById('catchScore').innerText = "0";
-            document.getElementById('waveLevel').innerText = "1";
-            document.getElementById('rhythmBonus').innerText = "1.0x";
-            document.getElementById('eraName').innerText = "ЭПОХА СТАРТА";
-            updateColorsByWave();
-            populateDiscs();
-            frameCounter = 0;
-            activePopups = [];
-            showToastMessage("Новая игра! Лови цветные диски, узнавай мудрость.");
+            totalCleared = 0;
+            gameOverFlag = false;
+            selectedBlockIndex = -1;
+            generateNewBlocks();
+            updateUI();
+            showMessage("Новая игра! Размещай блоки, заполняй линии.");
         }
         
-        // обработка кликов по canvas (ловля фрисби)
+        function updateUI() {
+            document.getElementById('scoreDisplay').innerText = score;
+            document.getElementById('comboDisplay').innerText = totalCleared;
+            draw();
+        }
+        
+        // Отрисовка игрового поля + панель предпросмотра блоков
+        function draw() {
+            ctx.clearRect(0, 0, 450, 450);
+            // сетка
+            for(let i=0; i<=size; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i*cellSize, 0);
+                ctx.lineTo(i*cellSize, 450);
+                ctx.moveTo(0, i*cellSize);
+                ctx.lineTo(450, i*cellSize);
+                ctx.strokeStyle = "rgba(80, 160, 220, 0.35)";
+                ctx.stroke();
+            }
+            // блоки на поле
+            for(let r=0; r<size; r++) {
+                for(let c=0; c<size; c++) {
+                    const colorIdx = grid[r][c];
+                    if(colorIdx !== null) {
+                        ctx.fillStyle = colorPalette[colorIdx % colorPalette.length];
+                        ctx.shadowBlur = 3;
+                        ctx.fillRect(c*cellSize+1, r*cellSize+1, cellSize-2, cellSize-2);
+                        ctx.fillStyle = "rgba(255,255,200,0.3)";
+                        ctx.fillRect(c*cellSize+3, r*cellSize+3, cellSize-6, cellSize-6);
+                    } else if(hoverCell && hoverCell.row === r && hoverCell.col === c && selectedBlockIndex !== -1 && !gameOverFlag) {
+                        // подсветка ячейки под курсором
+                        ctx.fillStyle = "rgba(255,220,100,0.3)";
+                        ctx.fillRect(c*cellSize, r*cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+            ctx.shadowBlur = 0;
+            
+            // Отрисовка трёх следующих блоков (справа или под полем) - нарисуем в правом нижнем углу канваса
+            const previewX = 320;
+            const previewY = 380;
+            ctx.font = "bold 12px monospace";
+            ctx.fillStyle = "#cdeeff";
+            ctx.fillText("ДОСТУПНЫЕ БЛОКИ:", 295, 30);
+            for(let i=0; i<currentBlocks.length; i++) {
+                const blk = currentBlocks[i];
+                const boxX = 310 + (i%3)*45;
+                const boxY = 45 + Math.floor(i/3)*55;
+                ctx.fillStyle = "#15222e";
+                ctx.fillRect(boxX-3, boxY-3, 42, 42);
+                ctx.strokeStyle = "#7fcdff";
+                ctx.strokeRect(boxX-3, boxY-3, 42, 42);
+                // рисуем миниатюру блока
+                const startX = boxX;
+                const startY = boxY;
+                const miniCell = 12;
+                for(let cell of blk.shapeData) {
+                    ctx.fillStyle = colorPalette[blk.colorIndex % colorPalette.length];
+                    ctx.fillRect(startX + cell[1]*miniCell, startY + cell[0]*miniCell, miniCell-1, miniCell-1);
+                }
+                if(selectedBlockIndex === i && !gameOverFlag) {
+                    ctx.beginPath();
+                    ctx.rect(boxX-5, boxY-5, 46, 46);
+                    ctx.strokeStyle = "gold";
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+            
+            // game over overlay
+            if(gameOverFlag) {
+                ctx.globalAlpha = 0.7;
+                ctx.fillStyle = "#000000";
+                ctx.fillRect(0, 0, 450, 450);
+                ctx.globalAlpha = 1;
+                ctx.font = "bold 26px 'Orbitron'";
+                ctx.fillStyle = "#ffaa66";
+                ctx.shadowBlur = 0;
+                ctx.fillText("GAME OVER", 115, 220);
+                ctx.font = "14px monospace";
+                ctx.fillStyle = "cyan";
+                ctx.fillText("нажмите НОВАЯ ИГРА", 150, 280);
+            }
+            
+            // всплывающее сообщение
+            if(toastMessage) {
+                ctx.font = "bold 14px monospace";
+                ctx.fillStyle = "#fff8e7";
+                ctx.shadowBlur = 2;
+                ctx.fillText(toastMessage, 20, 420);
+            }
+        }
+        
+        // Обработка кликов по полю: выбор блока + размещение
         function handleCanvasClick(e) {
+            if(gameOverFlag) return;
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
             let mouseX = (e.clientX - rect.left) * scaleX;
             let mouseY = (e.clientY - rect.top) * scaleY;
-            mouseX = Math.min(width, Math.max(0, mouseX));
-            mouseY = Math.min(height, Math.max(0, mouseY));
-            
-            // проходим с конца (верхние слои визуально не важны, ловим любой диск)
-            for(let i=discs.length-1; i>=0; i--) {
-                if(catchDisc(discs[i], mouseX, mouseY)) {
-                    // обновление счета
-                    document.getElementById('catchScore').innerText = Math.floor(score);
-                    break;
+            const col = Math.floor(mouseX / cellSize);
+            const row = Math.floor(mouseY / cellSize);
+            if(row >=0 && row < size && col >=0 && col < size) {
+                if(selectedBlockIndex !== -1) {
+                    // размещаем выбранный блок
+                    const success = placeBlock(selectedBlockIndex, row, col);
+                    if(success) {
+                        updateUI();
+                    }
+                    selectedBlockIndex = -1;
+                } else {
+                    // возможно, клик по миниатюре блока? проверим координаты
+                    // зона предпросмотра блоков
+                    for(let i=0; i<currentBlocks.length; i++) {
+                        const boxX = 310 + (i%3)*45;
+                        const boxY = 45 + Math.floor(i/3)*55;
+                        if(mouseX >= boxX-3 && mouseX <= boxX+39 && mouseY >= boxY-3 && mouseY <= boxY+39) {
+                            selectedBlockIndex = i;
+                            updateUI();
+                            showMessage(`Выбран блок ${currentBlocks[i].shapeData.length}-клеточный`, 800);
+                            break;
+                        }
+                    }
+                }
+                draw();
+            } else {
+                // клик вне поля — сброс выбора
+                if(selectedBlockIndex !== -1) {
+                    selectedBlockIndex = -1;
+                    updateUI();
                 }
             }
         }
         
-        // анимационный цикл (физика + рендер)
-        let animationId = null;
-        function gameLoop() {
-            frameCounter++;
-            updatePhysics();
-            // динамическое добавление дисков при сильном уменьшении
-            if(discs.length < maxDiscs && discs.length < 13) {
-                let newD = createDisc(true);
-                if(newD) discs.push(newD);
+        // движение мыши для подсветки ячейки
+        function handleMouseMove(e) {
+            if(gameOverFlag) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let mouseX = (e.clientX - rect.left) * scaleX;
+            let mouseY = (e.clientY - rect.top) * scaleY;
+            const col = Math.floor(mouseX / cellSize);
+            const row = Math.floor(mouseY / cellSize);
+            if(row >=0 && row < size && col >=0 && col < size) {
+                hoverCell = { row, col };
+            } else {
+                hoverCell = null;
             }
-            if(discs.length === 0) {
-                for(let i=0;i<3;i++) discs.push(createDisc(false));
-            }
-            // Обновить отображение очков
-            document.getElementById('catchScore').innerText = Math.floor(score);
             draw();
-            animationId = requestAnimationFrame(gameLoop);
         }
         
+        function leaveCanvas() {
+            hoverCell = null;
+            draw();
+        }
+        
+        // привязка событий
         canvas.addEventListener('click', handleCanvasClick);
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            initGame();
-        });
-        document.getElementById('infoBtn').addEventListener('click', () => {
-            showToastMessage("ФРИСБИ-МУДРОСТЬ: каждый цвет даёт знание. Чем выше раунд — быстрее диски и больше оттенков. Лови ритм!");
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseleave', leaveCanvas);
+        document.getElementById('resetBtn').addEventListener('click', () => { resetGame(); draw(); });
+        document.getElementById('helpBtn').addEventListener('click', () => {
+            showMessage("ПРАВИЛА: кликни по блоку справа, затем по полю для размещения. Заполни строку или столбец целиком — получи очки!", 4000);
         });
         
         // запуск
-        initGame();
-        gameLoop();
+        resetGame();
+        draw();
     })();
 </script>
 </body>
