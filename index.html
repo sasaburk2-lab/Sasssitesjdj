@@ -3,195 +3,475 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>White Site - Real Receiver</title>
+    <title>White Chat - Ранги и API</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: white; min-height: 100vh; padding: 40px 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 40px; }
-        #output { color: #000; font-family: monospace; font-size: 14px; line-height: 1.6; margin-top: 20px; }
-        #status { position: fixed; bottom: 10px; right: 10px; font-size: 11px; color: #0f0; background: #000; padding: 4px 8px; border-radius: 5px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .user-info {
+            background: #f0f0f0;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .rank-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .rank-user {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        .rank-creator {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+        
+        .username-input {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .username-input input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+        }
+        
+        .username-input button {
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fafafa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .message-content {
+            flex: 1;
+        }
+        
+        .message-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .message-name {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .message-rank {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .message-time {
+            color: #999;
+        }
+        
+        .message-text {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+        }
+        
+        .chat-input button {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+        
+        .api-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 10px;
+            padding: 5px 10px;
+            background: #333;
+            color: #0f0;
+            border-radius: 10px;
+            font-family: monospace;
+        }
+        
+        @media (max-width: 600px) {
+            .user-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="output"></div>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>💬 White Chat</h1>
+            <p>Чат с рангами и API управлением</p>
+        </div>
+        
+        <div class="user-info">
+            <div>
+                <span>👤 Ваш ранг: </span>
+                <span id="userRankBadge" class="rank-badge rank-user">Обычный</span>
+            </div>
+            <div class="username-input">
+                <input type="text" id="username" placeholder="Ваше имя" maxlength="20">
+                <button onclick="setUsername()">Установить</button>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-name">Система</span>
+                        <span class="message-rank" style="background:#999;color:white;">бот</span>
+                    </div>
+                    <div class="message-text">Добро пожаловать в чат! Введите имя чтобы начать.</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()">Отправить</button>
+        </div>
     </div>
-    <div id="status">● waiting for commands</div>
+    
+    <div class="api-status" id="apiStatus">● API готов</div>
 
     <script>
         // ==========================================
         // НАСТРОЙКИ
         // ==========================================
-        var SECRET_KEY = "1";
-        var ORIGINAL_HTML = document.body.innerHTML;
-        
-        // ==========================================
-        // ОБНОВЛЕНИЕ СТАТУСА
-        // ==========================================
-        function updateStatus(text, isError) {
-            var statusDiv = document.getElementById('status');
-            statusDiv.textContent = text;
-            statusDiv.style.color = isError ? '#f00' : '#0f0';
-            setTimeout(function() {
-                if (!isError) statusDiv.textContent = '● ready';
-            }, 2000);
-        }
-        
-        // ==========================================
-        // ФУНКЦИЯ СБРОСА
-        // ==========================================
-        function resetSite() {
-            document.getElementById('output').innerHTML = '';
-            var line = document.createElement('div');
-            line.textContent = 'Site has been reset';
-            line.style.color = '#000000';
-            document.getElementById('output').appendChild(line);
-            updateStatus('● reset complete');
-        }
-        
-        // ==========================================
-        // API ДЛЯ СКРИПТОВ
-        // ==========================================
-        var api = {
-            log: function(msg) {
-                var line = document.createElement('div');
-                line.textContent = msg;
-                line.style.color = '#000000';
-                document.getElementById('output').appendChild(line);
-            },
-            clear: function() {
-                document.getElementById('output').innerHTML = '';
-            },
-            html: function(htmlCode) {
-                document.getElementById('output').innerHTML = htmlCode;
-            },
-            reset: function() {
-                resetSite();
-            },
-            style: function(css) {
-                var style = document.createElement('style');
-                style.textContent = css;
-                document.head.appendChild(style);
-            },
-            title: function(t) {
-                document.title = t;
-            },
-            bg: function(color) {
-                document.body.style.backgroundColor = color;
-            },
-            redirect: function(url) {
-                window.location.href = url;
-            },
-            iframe: function(url) {
-                var iframe = document.createElement('iframe');
-                iframe.src = url;
-                iframe.style.position = 'fixed';
-                iframe.style.top = '0';
-                iframe.style.left = '0';
-                iframe.style.width = '100%';
-                iframe.style.height = '100%';
-                iframe.style.border = 'none';
-                document.body.innerHTML = '';
-                document.body.appendChild(iframe);
-            },
-            alert: function(msg) {
-                alert(msg);
-            }
+        const SECRET_KEY = "creator_key_123";
+        let currentUser = {
+            name: "Гость",
+            rank: "user"
         };
         
+        let messages = [];
+        
         // ==========================================
-        // ВЫПОЛНЕНИЕ СКРИПТА
+        // ЗАГРУЗКА СООБЩЕНИЙ
         // ==========================================
-        function executeScript(scriptCode) {
-            try {
-                var func = new Function('api', scriptCode);
-                func(api);
-                updateStatus('● script executed');
-                return true;
-            } catch(e) {
-                updateStatus('● error: ' + e.message, true);
-                return false;
+        function loadMessages() {
+            const saved = localStorage.getItem('chat_messages');
+            if (saved) {
+                messages = JSON.parse(saved);
+                renderMessages();
+            }
+        }
+        
+        function saveMessages() {
+            localStorage.setItem('chat_messages', JSON.stringify(messages));
+        }
+        
+        // ==========================================
+        // ОТОБРАЖЕНИЕ СООБЩЕНИЙ
+        // ==========================================
+        function renderMessages() {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+            
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                
+                const rankClass = msg.rank === 'creator' ? 'rank-creator' : 'rank-user';
+                const rankName = msg.rank === 'creator' ? 'СОЗДАТЕЛЬ' : 'Пользователь';
+                const rankColor = msg.rank === 'creator' ? '#f5576c' : '#999';
+                
+                messageDiv.innerHTML = `
+                    <div class="message-avatar" style="background: ${msg.rank === 'creator' ? '#f5576c' : '#667eea'}">
+                        ${msg.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-name">${escapeHtml(msg.name)}</span>
+                            <span class="message-rank" style="background:${rankColor};color:white;">${rankName}</span>
+                            <span class="message-time">${msg.time}</span>
+                        </div>
+                        <div class="message-text">${escapeHtml(msg.text)}</div>
+                    </div>
+                `;
+                container.appendChild(messageDiv);
+            });
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // ==========================================
+        // ОТПРАВКА СООБЩЕНИЯ
+        // ==========================================
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            if (currentUser.name === "Гость") {
+                alert("Сначала установите имя!");
+                return;
+            }
+            
+            addMessage(currentUser.name, text, currentUser.rank);
+            input.value = '';
+        }
+        
+        function addMessage(name, text, rank) {
+            const message = {
+                name: name,
+                text: text,
+                rank: rank,
+                time: new Date().toLocaleTimeString()
+            };
+            messages.push(message);
+            saveMessages();
+            renderMessages();
+        }
+        
+        // ==========================================
+        // УСТАНОВКА ИМЕНИ
+        // ==========================================
+        function setUsername() {
+            const input = document.getElementById('username');
+            const name = input.value.trim();
+            
+            if (!name) {
+                alert("Введите имя!");
+                return;
+            }
+            
+            currentUser.name = name;
+            updateUserInfo();
+            input.value = '';
+            
+            addMessage("Система", `${name} присоединился к чату`, "system");
+        }
+        
+        function updateUserInfo() {
+            const badge = document.getElementById('userRankBadge');
+            if (currentUser.rank === 'creator') {
+                badge.textContent = 'СОЗДАТЕЛЬ';
+                badge.className = 'rank-badge rank-creator';
+            } else {
+                badge.textContent = 'Обычный';
+                badge.className = 'rank-badge rank-user';
             }
         }
         
         // ==========================================
-        // ДЕКОДИРОВАНИЕ
+        // API ДЛЯ СОЗДАТЕЛЯ
         // ==========================================
-        function decodeBase64(encoded) {
-            try {
-                return atob(encoded);
-            } catch(e) {
-                return null;
-            }
+        function apiSendMessage(name, text) {
+            addMessage(name, text, 'creator');
+            return { success: true, message: "Message sent" };
+        }
+        
+        function apiClearChat() {
+            messages = [];
+            saveMessages();
+            renderMessages();
+            addMessage("Система", "Чат очищен создателем", "system");
+            return { success: true, message: "Chat cleared" };
+        }
+        
+        function apiSetCreator() {
+            currentUser.rank = 'creator';
+            updateUserInfo();
+            addMessage("Система", `${currentUser.name} теперь имеет ранг СОЗДАТЕЛЯ!`, "system");
+            return { success: true, message: "Creator rank granted" };
         }
         
         // ==========================================
-        // ПОЛУЧЕНИЕ ПАРАМЕТРОВ
+        // ПОЛУЧЕНИЕ API ПАРАМЕТРОВ
         // ==========================================
         function getUrlParams() {
-            var params = {};
-            var queryString = window.location.search.substring(1);
-            if (queryString.length === 0) return params;
-            
-            var pairs = queryString.split('&');
-            for (var i = 0; i < pairs.length; i++) {
-                var pair = pairs[i].split('=');
-                var key = decodeURIComponent(pair[0]);
-                var value = decodeURIComponent(pair[1] || '');
-                params[key] = value;
-            }
-            return params;
+            const params = new URLSearchParams(window.location.search);
+            return {
+                key: params.get('key'),
+                action: params.get('action'),
+                name: params.get('name'),
+                text: params.get('text')
+            };
+        }
+        
+        function decodeBase64(str) {
+            try { return atob(str); } catch(e) { return null; }
         }
         
         // ==========================================
-        // ПРОВЕРКА НОВЫХ КОМАНД (КАЖДЫЕ 3 СЕКУНДЫ)
+        // ОБРАБОТКА API ЗАПРОСОВ
         // ==========================================
-        function checkForCommands() {
-            fetch(window.location.href)
-                .then(function(response) { return response.text(); })
-                .catch(function(error) {});
-        }
-        
-        // ==========================================
-        // ГЛАВНАЯ ФУНКЦИЯ - ПРИНИМАЕТ ОТПРАВКИ
-        // ==========================================
-        function init() {
-            var params = getUrlParams();
+        function handleAPI() {
+            const params = getUrlParams();
             
-            if (!params.key && !params.cmd && !params.action) {
-                updateStatus('● ready for commands');
-                return;
-            }
+            if (!params.key) return;
             
             if (params.key !== SECRET_KEY) {
-                document.body.innerHTML = '<h3>Wrong API key</h3><a href=".">Back</a>';
-                updateStatus('● wrong key', true);
+                document.body.innerHTML = '<div style="text-align:center;padding:50px;"><h2>❌ Неверный API ключ</h2><a href=".">Вернуться в чат</a></div>';
                 return;
             }
             
-            if (params.action === 'reset') {
-                resetSite();
-                document.body.innerHTML = '<h3>Site reset</h3><a href=".">Back to site</a>';
-                updateStatus('● reset command received');
-                return;
+            let result = {};
+            
+            if (params.action === 'send' && params.name && params.text) {
+                const name = decodeBase64(params.name) || params.name;
+                const text = decodeBase64(params.text) || params.text;
+                result = apiSendMessage(name, text);
+            }
+            else if (params.action === 'clear') {
+                result = apiClearChat();
+            }
+            else if (params.action === 'setcreator' && params.name) {
+                const name = decodeBase64(params.name) || params.name;
+                currentUser.name = name;
+                result = apiSetCreator();
+            }
+            else {
+                result = { success: false, message: "Unknown action" };
             }
             
-            if (params.cmd) {
-                var decoded = decodeBase64(params.cmd);
-                if (decoded) {
-                    executeScript(decoded);
-                    document.body.innerHTML = '<h3>Script received and executed</h3><a href=".">Back to site</a>';
-                    updateStatus('● script received');
-                } else {
-                    document.body.innerHTML = '<h3>Decode error</h3><a href=".">Back</a>';
-                    updateStatus('● decode error', true);
-                }
-                return;
+            document.body.innerHTML = `
+                <div style="text-align:center;padding:50px;">
+                    <h2 style="color:${result.success ? '#0f0' : '#f00'}">${result.success ? '✅' : '❌'} API ${result.success ? 'Успех' : 'Ошибка'}</h2>
+                    <p>${result.message}</p>
+                    <br>
+                    <a href="." style="color:#667eea;">← Вернуться в чат</a>
+                </div>
+            `;
+        }
+        
+        // ==========================================
+        // ЗАГРУЗКА ПОЛЬЗОВАТЕЛЯ
+        // ==========================================
+        function loadUser() {
+            const saved = localStorage.getItem('chat_user');
+            if (saved) {
+                const user = JSON.parse(saved);
+                currentUser.name = user.name;
+                currentUser.rank = user.rank;
+                updateUserInfo();
+                document.getElementById('username').placeholder = currentUser.name;
             }
         }
         
+        function saveUser() {
+            localStorage.setItem('chat_user', JSON.stringify({
+                name: currentUser.name,
+                rank: currentUser.rank
+            }));
+        }
+        
+        // ==========================================
         // ЗАПУСК
-        init();
+        // ==========================================
+        loadMessages();
+        loadUser();
+        
+        setInterval(() => {
+            saveMessages();
+            saveUser();
+        }, 5000);
+        
+        handleAPI();
     </script>
 </body>
 </html>
