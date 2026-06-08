@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Падающие Блоки | Цветная головоломка с физикой и звуком</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>⛏️ Шахтёрская Империя | Копай вниз, открывай шахты</title>
     <style>
         * {
             user-select: none;
@@ -14,539 +14,551 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: linear-gradient(145deg, #0a0f1a 0%, #070b14 100%);
+            background: #0a0f1a;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', 'Poppins', 'Orbitron', monospace;
-            padding: 20px;
+            font-family: 'Courier New', 'Minecraft', 'Segoe UI', monospace;
+            padding: 10px;
+            touch-action: pan-x pan-y; /* разрешаем скролл для листания */
         }
 
+        /* контейнер — адаптивный под телефон */
         .game-wrapper {
-            background: rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(10px);
-            border-radius: 48px;
-            padding: 20px 25px 28px 25px;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.6);
-            border: 1px solid rgba(0, 255, 200, 0.35);
+            background: #1a1f2a;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            border: 3px solid #5a7a4a;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 550px;
+            margin: 0 auto;
         }
 
+        /* верхняя панель */
+        .top-bar {
+            background: #0a0f12e6;
+            backdrop-filter: blur(10px);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 2px solid #6a8a4a;
+            border-radius: 28px 28px 0 0;
+        }
+
+        .stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: #000000aa;
+            padding: 6px 14px;
+            border-radius: 40px;
+            color: #ffdd88;
+            display: flex;
+            gap: 8px;
+            align-items: baseline;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .stat-card span:first-child {
+            color: #aaffaa;
+            font-size: 0.7rem;
+        }
+
+        .stat-card span:last-child {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #ffcc44;
+        }
+
+        button {
+            background: linear-gradient(145deg, #2a2a1a, #1a1a0a);
+            border: 2px solid #d4a55a;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-family: monospace;
+            font-weight: bold;
+            color: #ffeeaa;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.05s linear;
+            touch-action: manipulation;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .depth-badge {
+            background: #0a0a00cc;
+            padding: 5px 14px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #88ffaa;
+        }
+
+        /* Canvas — поле для копания */
         canvas {
             display: block;
-            margin: 0 auto;
-            border-radius: 24px;
-            box-shadow: 0 0 0 3px rgba(255, 200, 80, 0.4), 0 15px 30px rgba(0,0,0,0.5);
+            margin: 0;
+            background: #2a5a2a;
             cursor: pointer;
-            background-color: #0a1220;
+            touch-action: none;
+            width: 100%;
+            height: auto;
         }
 
-        .info-panel {
-            margin-top: 20px;
+        /* Нижняя панель с кнопками листания и магазином */
+        .bottom-panel {
+            background: #0a0f12e6;
+            backdrop-filter: blur(10px);
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(12px);
-            padding: 10px 25px;
-            border-radius: 60px;
-            border: 1px solid rgba(0, 210, 200, 0.5);
+            border-top: 2px solid #6a8a4a;
+            border-radius: 0 0 28px 28px;
         }
 
-        .stat {
-            background: #0b1422dd;
-            padding: 6px 20px;
-            border-radius: 40px;
-            font-weight: bold;
-            color: #eef5ff;
-            font-size: 1rem;
+        .scroll-buttons {
             display: flex;
-            gap: 12px;
-            align-items: baseline;
-            font-family: 'Orbitron', monospace;
+            gap: 20px;
+            background: #00000088;
+            padding: 6px 16px;
+            border-radius: 50px;
         }
 
-        .stat span:first-child {
-            color: #6efff0;
-            font-size: 0.75rem;
-        }
-
-        .stat span:last-child {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #ffdd99;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .game-btn {
-            background: linear-gradient(135deg, #1a2c3c, #0a121f);
-            border: none;
+        .scroll-btn {
+            background: #2a3a2a;
+            border: 1px solid #8a7a4a;
             padding: 8px 22px;
+            font-size: 1.1rem;
             border-radius: 40px;
-            font-family: 'Orbitron', monospace;
             font-weight: bold;
-            color: #bbffff;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: 0.2s;
-            border: 1px solid #2c7f8a;
         }
 
-        .game-btn:hover {
-            transform: scale(1.02);
-            background: #2a4a60;
-            color: white;
-            border-color: gold;
-            box-shadow: 0 0 10px cyan;
+        .shop-btn {
+            background: #3a2a1a;
+            border-color: #ffaa44;
+            padding: 8px 18px;
         }
 
-        .next-block-preview {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #07121ee0;
-            padding: 5px 18px;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-family: monospace;
-        }
-
-        @media (max-width: 650px) {
-            .stat span:last-child { font-size: 1.1rem; }
-            .stat { padding: 4px 12px; }
-            .game-btn { padding: 5px 12px; font-size: 0.7rem; }
-            .info-panel { justify-content: center; }
+        @media (max-width: 550px) {
+            .stat-card span:last-child { font-size: 1rem; }
+            .stat-card { padding: 4px 10px; }
+            .scroll-btn { padding: 6px 16px; font-size: 0.9rem; }
+            button { padding: 6px 12px; font-size: 0.8rem; }
         }
     </style>
 </head>
 <body>
-<div>
-    <div class="game-wrapper">
-        <canvas id="gameCanvas" width="500" height="600" style="width:100%; height:auto; max-width:500px; aspect-ratio:500/600"></canvas>
-        <div class="info-panel">
-            <div class="stat"><span>ОЧКИ</span> <span id="scoreValue">0</span></div>
-            <div class="stat"><span>УРОВЕНЬ</span> <span id="levelValue">1</span></div>
-            <div class="stat"><span>ЛИНИИ</span> <span id="linesValue">0</span></div>
-            <div class="next-block-preview" id="previewArea">⬇️ СЛЕДУЮЩИЙ</div>
-            <div class="action-buttons">
-                <button class="game-btn" id="resetBtn">НОВАЯ ИГРА</button>
-                <button class="game-btn" id="soundToggleBtn">🔊 ЗВУК ВКЛ</button>
-            </div>
+<div class="game-wrapper">
+    <div class="top-bar">
+        <div class="stats">
+            <div class="stat-card"><span>🪙 МОНЕТЫ</span> <span id="coinDisplay">0</span></div>
+            <div class="stat-card"><span>📏 ГЛУБИНА</span> <span id="depthDisplay">0</span></div>
+            <div class="depth-badge" id="biomeBadge">🌿 ЛЕСНАЯ ШАХТА</div>
         </div>
+        <button id="resetBtn">🔄 НОВАЯ ИГРА</button>
+    </div>
+    <canvas id="gameCanvas" width="500" height="500" style="width:100%; aspect-ratio:1/1"></canvas>
+    <div class="bottom-panel">
+        <div class="scroll-buttons">
+            <button class="scroll-btn" id="scrollUpBtn">▲ ВВЕРХ</button>
+            <button class="scroll-btn" id="scrollDownBtn">▼ ВНИЗ</button>
+        </div>
+        <button class="shop-btn" id="shopBtn">🏪 МАГАЗИН / ОТКРЫТЬ ШАХТЫ</button>
     </div>
 </div>
 
 <script>
     (function(){
         // --------------------------------------------------------------
-        // ИГРА: ПАДАЮЩИЕ БЛОКИ (DRIP BLOCKS)
-        // Механика: сверху медленно падает блок (разной формы),
-        // игрок нажимает на колонку, блок падает вниз с анимацией,
-        // затем застывает. Заполненные линии исчезают. Звуки, прогрессия.
+        // ПОЛНОЦЕННЫЙ СИМУЛЯТОР ШАХТЁРА ДЛЯ ТЕЛЕФОНА
+        // - Копаем блоки пальцем (анимация треска)
+        // - Листаем глубину кнопками / свайпом
+        // - Открываем новые шахты за монеты (каждая даёт бонус к ценности)
+        // - Улучшения: сила кирки, скорость, шанс редкости
+        // - Сохранение в localStorage
         // --------------------------------------------------------------
         
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        let cols = 8;
-        let rows = 12;
-        let blockW = canvas.width / cols;   // 62.5
-        let blockH = canvas.height / rows;   // 50
+        let size = 500;
+        canvas.width = size;
+        canvas.height = size;
         
-        let grid = Array(rows).fill().map(() => Array(cols).fill(null));
+        const BLOCK_SIZE = 50;  // 10x10 блоков видно
         
-        // Цветовая палитра
-        const colorPalette = [
-            "#3a86ff", "#2ecc71", "#e74c3c", "#f1c40f", "#e67e22",
-            "#9b59b6", "#ff66b2", "#1abc9c", "#e84393", "#3498db",
-            "#f39c12", "#2c3e50", "#16a085", "#c0392b"
-        ];
+        // Камера (глубина)
+        let cameraDepth = 0;     // смещение по Y (какие блоки видим)
+        let playerDepth = 15;     // глубина игрока (старт)
         
-        // Формы блоков (разные виды)
-        const blockShapes = [
-            { shape: [[0,0]], w:1, h:1, name:"квадрат" },
-            { shape: [[0,0],[0,1]], w:2, h:1, name:"горизонт 2" },
-            { shape: [[0,0],[1,0]], w:1, h:2, name:"вертикаль 2" },
-            { shape: [[0,0],[0,1],[0,2]], w:3, h:1, name:"линия 3" },
-            { shape: [[0,0],[1,0],[2,0]], w:1, h:3, name:"верт 3" },
-            { shape: [[0,0],[1,0],[1,1]], w:2, h:2, name:"уголок" },
-            { shape: [[0,0],[0,1],[1,0]], w:2, h:2, name:"угол зерк" },
-            { shape: [[0,0],[0,1],[1,1]], w:2, h:2, name:"угол инверт" },
-            { shape: [[0,0],[0,1],[1,0],[1,1]], w:2, h:2, name:"блок 2x2" }
-        ];
+        // Бесконечный мир (Map)
+        let world = new Map();
         
-        // Звуки (Web Audio API)
-        let audioCtx = null;
-        let soundEnabled = true;
+        // Экономика
+        let coins = 100;          // стартовые монеты
+        let totalMined = 0;
         
-        function initAudio() {
-            if(audioCtx) return;
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Открытые шахты (каждая даёт множитель ценности)
+        let unlockedMines = {
+            forest: true,   // лесная (стартовая)
+            stone: false,   // каменистая
+            coal: false,
+            gold: false,
+            diamond: false,
+            netherite: false
+        };
+        
+        // Стоимость открытия шахт
+        const minePrices = {
+            stone: 500,
+            coal: 1500,
+            gold: 5000,
+            diamond: 20000,
+            netherite: 75000
+        };
+        
+        // Множители ценности от шахт
+        const mineMultipliers = {
+            forest: 1.0,
+            stone: 1.3,
+            coal: 1.7,
+            gold: 2.5,
+            diamond: 4.0,
+            netherite: 7.0
+        };
+        
+        // Улучшения
+        let pickaxePower = 1;     // урон по блоку
+        let rareChanceBonus = 0;  // +шанс найти редкую руду
+        let coinMultiplier = 1.0;
+        
+        // Анимация треска
+        let crackAnim = { active: false, x: 0, y: 0, stage: 0, particles: [], blockId: null };
+        let canMine = true;
+        
+        // Всплывающие монеты
+        let floatingTexts = [];
+        
+        // ----- ТИПЫ БЛОКОВ (с ценностью) -----
+        const BLOCKS = {
+            AIR: { id: 0, name: "воздух", color: null, solid: false, baseValue: 0 },
+            DIRT: { id: 1, name: "земля", color: "#8B5A2B", dark: "#7B4A1B", solid: true, baseValue: 2 },
+            GRASS: { id: 2, name: "трава", color: "#5a9e4a", dark: "#4a8e3a", solid: true, baseValue: 2 },
+            STONE: { id: 3, name: "камень", color: "#8a8a8a", dark: "#6a6a6a", solid: true, baseValue: 5 },
+            COAL: { id: 4, name: "уголь", color: "#4a4a4a", dark: "#2a2a2a", solid: true, baseValue: 12 },
+            IRON: { id: 5, name: "железо", color: "#c8b080", dark: "#a89060", solid: true, baseValue: 25 },
+            GOLD: { id: 6, name: "золото", color: "#f4c430", dark: "#d4a420", solid: true, baseValue: 55 },
+            DIAMOND: { id: 7, name: "алмаз", color: "#4AE0E8", dark: "#2AC0C8", solid: true, baseValue: 150 },
+            EMERALD: { id: 8, name: "изумруд", color: "#3a8a5a", dark: "#1a6a3a", solid: true, baseValue: 130 },
+            NETHERITE: { id: 9, name: "незерит", color: "#4a2a3a", dark: "#2a1a2a", solid: true, baseValue: 350 }
+        };
+        
+        // Генерация блока с учётом глубины и открытых шахт
+        function generateBlockAt(x, y) {
+            let depth = y;
+            let r = Math.random() * 100 + rareChanceBonus;
+            
+            // Незерит (очень глубоко)
+            if(depth > 70 && r < 3) return BLOCKS.NETHERITE;
+            if(depth > 40 && r < 6) return BLOCKS.DIAMOND;
+            if(depth > 35 && r < 9) return BLOCKS.EMERALD;
+            if(depth > 25 && r < 18) return BLOCKS.GOLD;
+            if(depth > 15 && r < 30) return BLOCKS.IRON;
+            if(depth > 8 && r < 50) return BLOCKS.COAL;
+            if(depth > 5) return BLOCKS.STONE;
+            if(depth <= 2) return BLOCKS.GRASS;
+            return BLOCKS.DIRT;
         }
         
-        function playDropSound() {
-            if(!soundEnabled) return;
-            try {
-                initAudio();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.value = 220;
-                gain.gain.value = 0.15;
-                osc.type = "sine";
-                osc.start();
-                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
-                osc.stop(audioCtx.currentTime + 0.4);
-            } catch(e) { console.log("audio err"); }
+        function getBlock(x, y) {
+            let key = `${x},${y}`;
+            if(world.has(key)) return world.get(key);
+            let block = generateBlockAt(x, y);
+            world.set(key, block);
+            return block;
         }
         
-        function playLineSound() {
-            if(!soundEnabled) return;
-            try {
-                initAudio();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.value = 440;
-                gain.gain.value = 0.2;
-                osc.type = "triangle";
-                osc.start();
-                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-                osc.stop(audioCtx.currentTime + 0.3);
-            } catch(e) {}
+        function setBlock(x, y, block) {
+            let key = `${x},${y}`;
+            world.set(key, block);
         }
         
-        function playGameOverSound() {
-            if(!soundEnabled) return;
-            try {
-                initAudio();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.value = 150;
-                gain.gain.value = 0.25;
-                osc.type = "sawtooth";
-                osc.start();
-                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.6);
-                osc.stop(audioCtx.currentTime + 0.6);
-            } catch(e) {}
+        // Получить текущий множитель ценности
+        function getCurrentValueMultiplier() {
+            let depth = playerDepth;
+            let multiplier = 1.0;
+            if(unlockedMines.netherite && depth > 60) multiplier = Math.max(multiplier, mineMultipliers.netherite);
+            else if(unlockedMines.diamond && depth > 35) multiplier = Math.max(multiplier, mineMultipliers.diamond);
+            else if(unlockedMines.gold && depth > 22) multiplier = Math.max(multiplier, mineMultipliers.gold);
+            else if(unlockedMines.coal && depth > 10) multiplier = Math.max(multiplier, mineMultipliers.coal);
+            else if(unlockedMines.stone && depth > 5) multiplier = Math.max(multiplier, mineMultipliers.stone);
+            else multiplier = mineMultipliers.forest;
+            return multiplier * coinMultiplier;
         }
         
-        // Игровые переменные
-        let currentBlock = null;      // { shapeData, colorIndex, posX, posY (в сетке), falling, fallProgress, targetRow, startY }
-        let nextBlock = null;
-        let score = 0;
-        let level = 1;
-        let linesClearedTotal = 0;
-        let gameActive = true;
-        let fallAnimation = false;
-        let animProgress = 0;    // 0..1
-        let animStartY = 0;
-        let animTargetY = 0;
-        let currentFallingCol = 0;
-        
-        let requestId = null;
-        
-        // Генерация случайного блока
-        function getRandomBlock() {
-            const shapeIdx = Math.floor(Math.random() * blockShapes.length);
-            const shapeData = blockShapes[shapeIdx];
-            const colorIdx = Math.floor(Math.random() * colorPalette.length);
-            return {
-                shape: shapeData.shape,
-                width: shapeData.w,
-                height: shapeData.h,
-                colorIndex: colorIdx,
-                shapeObj: shapeData
-            };
-        }
-        
-        function generateNextBlock() {
-            if(!nextBlock) {
-                nextBlock = getRandomBlock();
+        // Копание блока
+        function mineBlockAt(blockX, blockY) {
+            if(!canMine) return false;
+            let block = getBlock(blockX, blockY);
+            if(block.id === 0) return false;
+            
+            canMine = false;
+            // Запускаем анимацию треска
+            crackAnim.active = true;
+            crackAnim.x = blockX;
+            crackAnim.y = blockY;
+            crackAnim.stage = 0;
+            crackAnim.blockId = block.id;
+            crackAnim.particles = [];
+            for(let i=0;i<10;i++) {
+                crackAnim.particles.push({
+                    x: Math.random() * BLOCK_SIZE,
+                    y: Math.random() * BLOCK_SIZE,
+                    vx: (Math.random() - 0.5) * 7,
+                    vy: (Math.random() - 0.5) * 7 - 2,
+                    life: 18
+                });
             }
-            currentBlock = JSON.parse(JSON.stringify(nextBlock));
-            nextBlock = getRandomBlock();
-            // начальная позиция: по центру по горизонтали, вертикаль = 0
-            let startCol = Math.floor((cols - currentBlock.width) / 2);
-            if(startCol < 0) startCol = 0;
-            if(startCol + currentBlock.width > cols) startCol = cols - currentBlock.width;
-            currentBlock.posX = startCol;
-            currentBlock.posY = 0;
-            currentBlock.falling = true;
-            currentBlock.fallProgress = 0;
-            currentBlock.targetRow = null;
-            currentBlock.animating = false;
-            // проверка на проигрыш сразу
-            if(!canPlaceAt(currentBlock, currentBlock.posX, 0)) {
-                gameActive = false;
-                playGameOverSound();
-            }
-        }
-        
-        // Проверка возможности разместить блок в определённой позиции (по колонке X, Y)
-        function canPlaceAt(block, offsetX, offsetY) {
-            for(let cell of block.shape) {
-                let r = offsetY + cell[0];
-                let c = offsetX + cell[1];
-                if(r >= rows || c < 0 || c >= cols) return false;
-                if(r >= 0 && grid[r][c] !== null) return false;
-                if(r < 0) continue; // выше поля допустимо
-            }
+            
+            let interval = setInterval(() => {
+                if(!crackAnim.active) { clearInterval(interval); return; }
+                crackAnim.stage++;
+                if(crackAnim.stage >= 4) {
+                    clearInterval(interval);
+                    let value = Math.floor(block.baseValue * getCurrentValueMultiplier());
+                    coins += value;
+                    totalMined++;
+                    saveGame();
+                    setBlock(blockX, blockY, BLOCKS.AIR);
+                    showFloatingText(`+${value} 🪙`, blockX, blockY);
+                    crackAnim.active = false;
+                    canMine = true;
+                    updateUI();
+                }
+            }, 90);
             return true;
         }
         
-        // Получить максимальную строку, куда упадёт блок в выбранной колонке (нажатие)
-        function getDropRowForColumn(block, targetCol) {
-            for(let row = 0; row <= rows; row++) {
-                if(!canPlaceAt(block, targetCol, row)) {
-                    return row - 1;
-                }
-            }
-            return rows - block.height;
+        function showFloatingText(text, bx, by) {
+            floatingTexts.push({ text: text, x: bx, y: by, life: 35 });
         }
         
-        // Начать анимацию падения блока в указанную колонку
-        function startFallingToColumn(col) {
-            if(!gameActive) return false;
-            if(!currentBlock || !currentBlock.falling) return false;
-            // проверка, можно ли разместить блок в этой колонке
-            let possible = true;
-            for(let cell of currentBlock.shape) {
-                let c = col + cell[1];
-                if(c < 0 || c >= cols) { possible = false; break; }
-            }
-            if(!possible) return false;
-            
-            let targetRow = getDropRowForColumn(currentBlock, col);
-            if(targetRow < 0) return false;
-            
-            // анимируем
-            currentBlock.animating = true;
-            currentBlock.startY = currentBlock.posY;
-            currentBlock.targetY = targetRow;
-            currentBlock.animProgress = 0;
-            currentBlock.fallTargetCol = col;
-            currentBlock.posX = col;  // фиксируем колонку
-            
-            playDropSound();
-            return true;
-        }
-        
-        // Завершить падение и зафиксировать блок на сетке
-        function commitBlock() {
-            if(!currentBlock) return;
-            // размещаем блок в сетке
-            for(let cell of currentBlock.shape) {
-                let r = currentBlock.targetY + cell[0];
-                let c = currentBlock.posX + cell[1];
-                if(r >= 0 && r < rows && c >=0 && c < cols) {
-                    grid[r][c] = currentBlock.colorIndex;
-                }
-            }
-            // проверить и очистить заполненные линии
-            let cleared = clearFullLines();
-            if(cleared > 0) {
-                linesClearedTotal += cleared;
-                let points = 100 * cleared * level;
-                if(cleared >= 4) points = Math.floor(points * 1.5);
-                score += points;
-                playLineSound();
-                // повышение уровня каждые 8 линий
-                let newLevel = 1 + Math.floor(linesClearedTotal / 8);
-                if(newLevel > level) {
-                    level = newLevel;
-                }
-                updateUI();
-            }
-            // создать новый блок
-            generateNextBlock();
+        // Листание глубины
+        function scrollDepth(delta) {
+            let newDepth = playerDepth + delta;
+            if(newDepth < 0) newDepth = 0;
+            if(newDepth > 500) newDepth = 500;
+            playerDepth = newDepth;
+            cameraDepth = playerDepth - 5;
+            if(cameraDepth < 0) cameraDepth = 0;
             updateUI();
-            if(!gameActive) {
-                playGameOverSound();
-            }
         }
         
-        // Очистка полных строк и столбцов (как в Block Blast)
-        function clearFullLines() {
-            let rowsToClear = [];
-            for(let r=0; r<rows; r++) {
-                let full = true;
-                for(let c=0; c<cols; c++) {
-                    if(grid[r][c] === null) { full=false; break; }
-                }
-                if(full) rowsToClear.push(r);
+        // Открытие новой шахты
+        function unlockMine(mineId) {
+            let price = minePrices[mineId];
+            if(coins >= price && !unlockedMines[mineId]) {
+                coins -= price;
+                unlockedMines[mineId] = true;
+                saveGame();
+                updateUI();
+                showFloatingText(`🏆 ОТКРЫТО: ${mineId.toUpperCase()} ШАХТА!`, 5, playerDepth);
+                return true;
             }
-            for(let r of rowsToClear) {
-                for(let c=0; c<cols; c++) grid[r][c] = null;
-                // сдвиг вниз
-                for(let rr=r; rr>0; rr--) {
-                    for(let c=0; c<cols; c++) {
-                        grid[rr][c] = grid[rr-1][c];
-                    }
-                }
-                for(let c=0; c<cols; c++) grid[0][c] = null;
-            }
-            return rowsToClear.length;
+            return false;
         }
         
-        function updateUI() {
-            document.getElementById('scoreValue').innerText = Math.floor(score);
-            document.getElementById('levelValue').innerText = level;
-            document.getElementById('linesValue').innerText = linesClearedTotal;
-            // отрисовать превью следующего блока
-            drawPreview();
+        // Магазин
+        function openShop() {
+            let msg = "🏪 МАГАЗИН ШАХТЁРА\n\n";
+            msg += `💰 Монет: ${Math.floor(coins)}\n`;
+            msg += `⛏️ Сила кирки: ${pickaxePower} (+10 монет за улучшение)\n`;
+            msg += `🍀 Шанс редкости: +${rareChanceBonus}% (50 монет)\n`;
+            if(!unlockedMines.stone) msg += `\n🔹 КАМЕННАЯ ШАХТА - 500 🪙 (множитель x1.3)`;
+            if(!unlockedMines.coal) msg += `\n⚫ УГОЛЬНАЯ ШАХТА - 1500 🪙 (x1.7)`;
+            if(!unlockedMines.gold) msg += `\n🟡 ЗОЛОТАЯ ШАХТА - 5000 🪙 (x2.5)`;
+            if(!unlockedMines.diamond) msg += `\n💎 АЛМАЗНАЯ ШАХТА - 20000 🪙 (x4.0)`;
+            if(!unlockedMines.netherite) msg += `\n🔥 НЕЗЕРИТОВАЯ ШАХТА - 75000 🪙 (x7.0)`;
+            msg += `\n\nНажмите на кнопку шахты, которую хотите открыть.`;
+            let action = prompt(msg + "\n\nВведите название шахты (stone, coal, gold, diamond, netherite) или upgrade_pick, upgrade_luck:");
+            if(action === "upgrade_pick" && coins >= 10) { coins -= 10; pickaxePower++; saveGame(); updateUI(); alert("Кирка улучшена!"); }
+            else if(action === "upgrade_luck" && coins >= 50) { coins -= 50; rareChanceBonus += 3; saveGame(); updateUI(); alert("Шанс редкости +3%"); }
+            else if(action === "stone") unlockMine("stone");
+            else if(action === "coal") unlockMine("coal");
+            else if(action === "gold") unlockMine("gold");
+            else if(action === "diamond") unlockMine("diamond");
+            else if(action === "netherite") unlockMine("netherite");
+            else alert("Неверная команда или недостаточно монет");
         }
         
-        function drawPreview() {
-            const previewDiv = document.getElementById('previewArea');
-            if(!nextBlock) return;
-            let str = "⬇️ СЛЕД.: ";
-            if(nextBlock.shapeObj.name) str += nextBlock.shapeObj.name;
-            else str += "блок";
-            previewDiv.innerHTML = str;
+        // Сохранение/загрузка
+        function saveGame() {
+            let save = {
+                coins, totalMined, playerDepth, pickaxePower, rareChanceBonus,
+                unlockedMines, coinMultiplier
+            };
+            localStorage.setItem("mineSaver", JSON.stringify(save));
         }
         
-        // отрисовка всей сцены
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // сетка
-            for(let i=0; i<=cols; i++) {
-                ctx.beginPath();
-                ctx.moveTo(i*blockW, 0);
-                ctx.lineTo(i*blockW, canvas.height);
-                ctx.strokeStyle = "rgba(100,180,240,0.3)";
-                ctx.stroke();
+        function loadGame() {
+            let saved = localStorage.getItem("mineSaver");
+            if(saved) {
+                let data = JSON.parse(saved);
+                coins = data.coins;
+                totalMined = data.totalMined;
+                playerDepth = data.playerDepth;
+                pickaxePower = data.pickaxePower;
+                rareChanceBonus = data.rareChanceBonus;
+                unlockedMines = data.unlockedMines;
+                coinMultiplier = data.coinMultiplier;
+                cameraDepth = playerDepth - 5;
+                if(cameraDepth < 0) cameraDepth = 0;
+            } else {
+                coins = 100;
+                totalMined = 0;
+                playerDepth = 15;
+                pickaxePower = 1;
+                rareChanceBonus = 0;
+                unlockedMines = { forest: true, stone: false, coal: false, gold: false, diamond: false, netherite: false };
+                coinMultiplier = 1.0;
+                cameraDepth = 10;
             }
-            for(let i=0; i<=rows; i++) {
-                ctx.beginPath();
-                ctx.moveTo(0, i*blockH);
-                ctx.lineTo(canvas.width, i*blockH);
-                ctx.stroke();
-            }
-            // статические блоки
-            for(let r=0; r<rows; r++) {
-                for(let c=0; c<cols; c++) {
-                    let val = grid[r][c];
-                    if(val !== null) {
-                        ctx.fillStyle = colorPalette[val % colorPalette.length];
-                        ctx.shadowBlur = 3;
-                        ctx.fillRect(c*blockW+1, r*blockH+1, blockW-2, blockH-2);
-                        ctx.fillStyle = "rgba(255,245,180,0.25)";
-                        ctx.fillRect(c*blockW+3, r*blockH+3, blockW-6, blockH-6);
-                    }
-                }
-            }
-            // падающий блок с анимацией
-            if(currentBlock && gameActive) {
-                let drawY = currentBlock.posY;
-                if(currentBlock.animating && currentBlock.animProgress !== undefined) {
-                    let t = currentBlock.animProgress;
-                    drawY = currentBlock.startY + (currentBlock.targetY - currentBlock.startY) * t;
-                } else if(currentBlock.falling && !currentBlock.animating) {
-                    drawY = currentBlock.posY;
-                }
-                for(let cell of currentBlock.shape) {
-                    let x = (currentBlock.posX + cell[1]) * blockW;
-                    let y = (drawY + cell[0]) * blockH;
-                    ctx.fillStyle = colorPalette[currentBlock.colorIndex % colorPalette.length];
-                    ctx.fillRect(x+1, y+1, blockW-2, blockH-2);
-                    ctx.fillStyle = "rgba(255,240,150,0.5)";
-                    ctx.fillRect(x+3, y+3, blockW-6, blockH-6);
-                }
-            }
-            ctx.shadowBlur = 0;
-            if(!gameActive) {
-                ctx.globalAlpha = 0.7;
-                ctx.fillStyle = "#000000";
-                ctx.fillRect(0,0,canvas.width,canvas.height);
-                ctx.globalAlpha = 1;
-                ctx.font = "bold 28px 'Orbitron'";
-                ctx.fillStyle = "#ffaa77";
-                ctx.fillText("GAME OVER", canvas.width/2-100, canvas.height/2);
-                ctx.font = "12px monospace";
-                ctx.fillStyle = "cyan";
-                ctx.fillText("нажмите НОВАЯ ИГРА", canvas.width/2-85, canvas.height/2+45);
-            }
-        }
-        
-        // анимационный цикл
-        let lastTimestamp = 0;
-        function animate() {
-            if(!gameActive) {
-                draw();
-                requestAnimationFrame(animate);
-                return;
-            }
-            if(currentBlock && currentBlock.animating) {
-                let step = 0.12;
-                currentBlock.animProgress = (currentBlock.animProgress || 0) + step;
-                if(currentBlock.animProgress >= 1.0) {
-                    currentBlock.animProgress = 1.0;
-                    currentBlock.animating = false;
-                    currentBlock.posY = currentBlock.targetY;
-                    currentBlock.falling = false;
-                    commitBlock();
-                }
-            } else if(currentBlock && !currentBlock.animating && !currentBlock.falling) {
-                // блок только что зафиксирован, ждём следующий
-            } else if(currentBlock && currentBlock.falling && !currentBlock.animating) {
-                // нет активной анимации падения — блок просто висит, ожидая клика
-            }
-            draw();
-            requestAnimationFrame(animate);
-        }
-        
-        // Обработка клика по полю
-        function handleCanvasClick(e) {
-            if(!gameActive) return;
-            if(!currentBlock || currentBlock.animating) return;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            let mouseX = (e.clientX - rect.left) * scaleX;
-            let colIndex = Math.floor(mouseX / blockW);
-            if(colIndex >= 0 && colIndex < cols) {
-                startFallingToColumn(colIndex);
-            }
+            updateUI();
         }
         
         function resetGame() {
-            grid = Array(rows).fill().map(() => Array(cols).fill(null));
-            score = 0;
-            level = 1;
-            linesClearedTotal = 0;
-            gameActive = true;
-            nextBlock = getRandomBlock();
-            generateNextBlock();
+            localStorage.removeItem("mineSaver");
+            world.clear();
+            coins = 100;
+            totalMined = 0;
+            playerDepth = 15;
+            pickaxePower = 1;
+            rareChanceBonus = 0;
+            unlockedMines = { forest: true, stone: false, coal: false, gold: false, diamond: false, netherite: false };
+            coinMultiplier = 1.0;
+            cameraDepth = 10;
             updateUI();
-            playDropSound(); // символический старт
+            showFloatingText("НОВАЯ ШАХТА!", 5, playerDepth);
         }
         
-        // звук тоггл
-        let soundBtn = document.getElementById('soundToggleBtn');
-        soundBtn.addEventListener('click', () => {
-            soundEnabled = !soundEnabled;
-            soundBtn.innerText = soundEnabled ? "🔊 ЗВУК ВКЛ" : "🔇 ЗВУК ВЫКЛ";
-        });
+        function updateUI() {
+            document.getElementById('coinDisplay').innerText = Math.floor(coins);
+            document.getElementById('depthDisplay').innerText = playerDepth;
+            let biome = "🌿 ЛЕСНАЯ";
+            if(playerDepth > 60 && unlockedMines.netherite) biome = "🔥 НЕЗЕРИТОВАЯ";
+            else if(playerDepth > 35 && unlockedMines.diamond) biome = "💎 АЛМАЗНАЯ";
+            else if(playerDepth > 22 && unlockedMines.gold) biome = "🟡 ЗОЛОТАЯ";
+            else if(playerDepth > 10 && unlockedMines.coal) biome = "⚫ УГОЛЬНАЯ";
+            else if(playerDepth > 5 && unlockedMines.stone) biome = "🪨 КАМЕННАЯ";
+            document.getElementById('biomeBadge').innerHTML = biome;
+        }
         
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            resetGame();
-        });
-        canvas.addEventListener('click', handleCanvasClick);
+        // Отрисовка
+        function draw() {
+            ctx.clearRect(0, 0, size, size);
+            let startX = 0;
+            let startY = cameraDepth;
+            let endX = startX + 10;
+            let endY = startY + 10;
+            
+            for(let x = startX; x < endX; x++) {
+                for(let y = startY; y < endY; y++) {
+                    let block = getBlock(x, y);
+                    if(block.id !== 0) {
+                        let screenX = (x - startX) * BLOCK_SIZE;
+                        let screenY = (y - startY) * BLOCK_SIZE;
+                        ctx.fillStyle = block.color;
+                        ctx.fillRect(screenX, screenY, BLOCK_SIZE-1, BLOCK_SIZE-1);
+                        ctx.fillStyle = block.dark;
+                        ctx.fillRect(screenX+3, screenY+3, BLOCK_SIZE-7, 5);
+                        ctx.strokeStyle = "#2a2a2a";
+                        ctx.strokeRect(screenX, screenY, BLOCK_SIZE-1, BLOCK_SIZE-1);
+                    }
+                }
+            }
+            
+            // Анимация треска
+            if(crackAnim.active) {
+                let bx = crackAnim.x;
+                let by = crackAnim.y;
+                let screenX = (bx - 0) * BLOCK_SIZE;
+                let screenY = (by - cameraDepth) * BLOCK_SIZE;
+                ctx.fillStyle = `rgba(255,200,100,${0.3 + crackAnim.stage*0.15})`;
+                ctx.fillRect(screenX, screenY, BLOCK_SIZE, BLOCK_SIZE);
+                ctx.fillStyle = "#ffaa44";
+                ctx.font = "bold 26px monospace";
+                ctx.fillText("💥", screenX+12, screenY+32);
+                for(let p of crackAnim.particles) {
+                    ctx.fillStyle = `rgba(200,100,50,${p.life/20})`;
+                    ctx.fillRect(screenX + p.x, screenY + p.y, 4, 4);
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life--;
+                }
+            }
+            
+            // Тексты монет
+            for(let i=0;i<floatingTexts.length;i++) {
+                let t = floatingTexts[i];
+                let tx = (t.x - 0) * BLOCK_SIZE + 20;
+                let ty = (t.y - cameraDepth) * BLOCK_SIZE - t.life/2;
+                ctx.font = "bold 16px monospace";
+                ctx.fillStyle = `rgba(255, 220, 0, ${t.life/30})`;
+                ctx.fillText(t.text, tx, ty);
+                t.life -= 2;
+                if(t.life <= 0) floatingTexts.splice(i,1);
+            }
+            
+            // Курсор
+            ctx.strokeStyle = "#ffdd88";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(size/2 - BLOCK_SIZE/2, size/2 - BLOCK_SIZE/2, BLOCK_SIZE, BLOCK_SIZE);
+        }
         
-        resetGame();
+        // Обработка клика по блоку
+        function handleCanvasTap(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scale = canvas.width / rect.width;
+            let touchX = (e.clientX - rect.left) * scale;
+            let touchY = (e.clientY - rect.top) * scale;
+            let blockCol = Math.floor(touchX / BLOCK_SIZE);
+            let blockRow = Math.floor(touchY / BLOCK_SIZE);
+            let targetX = blockCol;
+            let targetY = cameraDepth + blockRow;
+            mineBlockAt(targetX, targetY);
+        }
+        
+        canvas.addEventListener('click', handleCanvasTap);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleCanvasTap(e.touches[0]); });
+        
+        document.getElementById('scrollUpBtn').addEventListener('click', () => scrollDepth(-3));
+        document.getElementById('scrollDownBtn').addEventListener('click', () => scrollDepth(3));
+        document.getElementById('shopBtn').addEventListener('click', () => openShop());
+        document.getElementById('resetBtn').addEventListener('click', () => resetGame());
+        
+        loadGame();
+        setInterval(() => saveGame(), 30000);
+        
+        function animate() {
+            draw();
+            requestAnimationFrame(animate);
+        }
         animate();
-        // дополнительная инициализация аудио по первому клику
-        canvas.addEventListener('click', () => { initAudio(); }, { once: true });
     })();
 </script>
 </body>
