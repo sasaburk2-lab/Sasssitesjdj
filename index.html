@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Block Blast — Цветные блоки | стратегическая головоломка</title>
+    <title>Падающие Блоки | Цветная головоломка с физикой и звуком</title>
     <style>
         * {
             user-select: none;
@@ -14,52 +14,51 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0a1a2a 0%, #0a0f1a 100%);
+            background: linear-gradient(145deg, #0a0f1a 0%, #070b14 100%);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', 'Poppins', system-ui, monospace;
+            font-family: 'Segoe UI', 'Poppins', 'Orbitron', monospace;
             padding: 20px;
         }
 
-        .game-container {
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(8px);
-            border-radius: 56px;
+        .game-wrapper {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(10px);
+            border-radius: 48px;
             padding: 20px 25px 28px 25px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            border: 1px solid rgba(100, 200, 255, 0.3);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.6);
+            border: 1px solid rgba(0, 255, 200, 0.35);
         }
 
         canvas {
             display: block;
             margin: 0 auto;
             border-radius: 24px;
-            box-shadow: 0 0 0 3px rgba(255,200,80,0.3), 0 15px 30px rgba(0,0,0,0.4);
+            box-shadow: 0 0 0 3px rgba(255, 200, 80, 0.4), 0 15px 30px rgba(0,0,0,0.5);
             cursor: pointer;
-            background-color: #0e1622;
+            background-color: #0a1220;
         }
 
-        .info-bar {
+        .info-panel {
             margin-top: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(10px);
-            padding: 10px 24px;
-            border-radius: 48px;
-            border: 1px solid rgba(0, 210, 200, 0.4);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            padding: 10px 25px;
+            border-radius: 60px;
+            border: 1px solid rgba(0, 210, 200, 0.5);
         }
 
         .stat {
-            background: #0a111fd9;
+            background: #0b1422dd;
             padding: 6px 20px;
             border-radius: 40px;
             font-weight: bold;
-            letter-spacing: 1px;
             color: #eef5ff;
             font-size: 1rem;
             display: flex;
@@ -70,24 +69,24 @@
 
         .stat span:first-child {
             color: #6efff0;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
         }
 
         .stat span:last-child {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 800;
             color: #ffdd99;
         }
 
-        .buttons {
+        .action-buttons {
             display: flex;
             gap: 15px;
         }
 
-        .btn {
-            background: linear-gradient(135deg, #1e2f3f, #0a121f);
+        .game-btn {
+            background: linear-gradient(135deg, #1a2c3c, #0a121f);
             border: none;
-            padding: 8px 24px;
+            padding: 8px 22px;
             border-radius: 40px;
             font-family: 'Orbitron', monospace;
             font-weight: bold;
@@ -95,48 +94,48 @@
             font-size: 0.9rem;
             cursor: pointer;
             transition: 0.2s;
-            box-shadow: 0 3px 8px black;
             border: 1px solid #2c7f8a;
         }
 
-        .btn:hover {
+        .game-btn:hover {
             transform: scale(1.02);
-            background: #2a4558;
+            background: #2a4a60;
             color: white;
             border-color: gold;
-            box-shadow: 0 0 12px cyan;
+            box-shadow: 0 0 10px cyan;
         }
 
-        .next-label {
-            background: #07121ec9;
-            padding: 6px 16px;
-            border-radius: 30px;
+        .next-block-preview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #07121ee0;
+            padding: 5px 18px;
+            border-radius: 40px;
             font-size: 0.8rem;
-            font-weight: bold;
-            color: #aaffdd;
             font-family: monospace;
-            letter-spacing: 1px;
         }
 
-        @media (max-width: 700px) {
-            .stat span:last-child { font-size: 1.2rem; }
+        @media (max-width: 650px) {
+            .stat span:last-child { font-size: 1.1rem; }
             .stat { padding: 4px 12px; }
-            .btn { padding: 5px 14px; font-size: 0.7rem; }
-            .info-bar { justify-content: center; }
+            .game-btn { padding: 5px 12px; font-size: 0.7rem; }
+            .info-panel { justify-content: center; }
         }
     </style>
 </head>
 <body>
 <div>
-    <div class="game-container">
-        <canvas id="boardCanvas" width="450" height="450" style="width:100%; height:auto; max-width:450px; aspect-ratio:1/1"></canvas>
-        <div class="info-bar">
-            <div class="stat"><span>ОЧКИ</span> <span id="scoreDisplay">0</span></div>
-            <div class="stat"><span>СЧЁТ</span> <span id="comboDisplay">0</span></div>
-            <div class="next-label">СЛЕДУЮЩИЕ БЛОКИ</div>
-            <div class="buttons">
-                <button class="btn" id="resetBtn">НОВАЯ ИГРА</button>
-                <button class="btn" id="helpBtn">ПРАВИЛА</button>
+    <div class="game-wrapper">
+        <canvas id="gameCanvas" width="500" height="600" style="width:100%; height:auto; max-width:500px; aspect-ratio:500/600"></canvas>
+        <div class="info-panel">
+            <div class="stat"><span>ОЧКИ</span> <span id="scoreValue">0</span></div>
+            <div class="stat"><span>УРОВЕНЬ</span> <span id="levelValue">1</span></div>
+            <div class="stat"><span>ЛИНИИ</span> <span id="linesValue">0</span></div>
+            <div class="next-block-preview" id="previewArea">⬇️ СЛЕДУЮЩИЙ</div>
+            <div class="action-buttons">
+                <button class="game-btn" id="resetBtn">НОВАЯ ИГРА</button>
+                <button class="game-btn" id="soundToggleBtn">🔊 ЗВУК ВКЛ</button>
             </div>
         </div>
     </div>
@@ -144,383 +143,410 @@
 
 <script>
     (function(){
-        // ------------------------------------------------------------------
-        // ИГРА: BLOCK BLAST (БЛОК БАСТЕР)
-        // Классическая головоломка: поле 8x8, три предлагаемых блока.
-        // Игрок перетаскивает (или кликает) блоки на поле. При заполнении строк/столбцов — очистка и очки.
-        // Безграничная игра, долгая прогрессия: сложность растёт через новые формы блоков.
-        // ------------------------------------------------------------------
+        // --------------------------------------------------------------
+        // ИГРА: ПАДАЮЩИЕ БЛОКИ (DRIP BLOCKS)
+        // Механика: сверху медленно падает блок (разной формы),
+        // игрок нажимает на колонку, блок падает вниз с анимацией,
+        // затем застывает. Заполненные линии исчезают. Звуки, прогрессия.
+        // --------------------------------------------------------------
         
-        const canvas = document.getElementById('boardCanvas');
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        let size = 8;            // поле 8x8
-        let cellSize = 450 / size; // 56.25px
+        let cols = 8;
+        let rows = 12;
+        let blockW = canvas.width / cols;   // 62.5
+        let blockH = canvas.height / rows;   // 50
         
-        let grid = Array(size).fill().map(() => Array(size).fill(null)); // null = пусто, иначе цветовой индекс
+        let grid = Array(rows).fill().map(() => Array(cols).fill(null));
         
-        // Библиотека цветов блоков (яркие, приятные)
+        // Цветовая палитра
         const colorPalette = [
             "#3a86ff", "#2ecc71", "#e74c3c", "#f1c40f", "#e67e22",
             "#9b59b6", "#ff66b2", "#1abc9c", "#e84393", "#3498db",
-            "#f39c12", "#2c3e50", "#16a085", "#c0392b", "#8e44ad"
+            "#f39c12", "#2c3e50", "#16a085", "#c0392b"
         ];
         
-        // ----- ФОРМЫ БЛОКОВ (БЛОКИ РАЗНЫХ ФОРМ, КАК В BLOCK BLAST) -----
-        // Каждая фигура — массив координат [row, col] относительно якоря (0,0)
+        // Формы блоков (разные виды)
         const blockShapes = [
-            { shape: [[0,0]], name: "моноблок", cells:1 },                      // 1x1
-            { shape: [[0,0],[0,1]], name: "горизонталь 2", cells:2 },           // 1x2
-            { shape: [[0,0],[1,0]], name: "вертикаль 2", cells:2 },             // 2x1
-            { shape: [[0,0],[0,1],[0,2]], name: "линия 3 гор", cells:3 },       // 1x3
-            { shape: [[0,0],[1,0],[2,0]], name: "линия 3 верт", cells:3 },      // 3x1
-            { shape: [[0,0],[0,1],[1,0]], name: "уголок L", cells:3 },          // L-тримино
-            { shape: [[0,0],[1,0],[1,1]], name: "угол зеркальный", cells:3 },
-            { shape: [[0,0],[0,1],[1,1]], name: "угол обратный", cells:3 },
-            { shape: [[0,0],[1,0],[0,1],[1,1]], name: "квадрат 2x2", cells:4 }, // блок 2x2
-            { shape: [[0,0],[0,1],[0,2],[1,1]], name: "Т-образный", cells:4 },
-            { shape: [[0,0],[1,0],[2,0],[2,1]], name: "L большой", cells:4 },
-            { shape: [[0,0],[0,1],[0,2],[1,0]], name: "змейка", cells:4 },
-            { shape: [[0,0],[0,1],[1,1],[1,2]], name: "зигзаг", cells:4 }
+            { shape: [[0,0]], w:1, h:1, name:"квадрат" },
+            { shape: [[0,0],[0,1]], w:2, h:1, name:"горизонт 2" },
+            { shape: [[0,0],[1,0]], w:1, h:2, name:"вертикаль 2" },
+            { shape: [[0,0],[0,1],[0,2]], w:3, h:1, name:"линия 3" },
+            { shape: [[0,0],[1,0],[2,0]], w:1, h:3, name:"верт 3" },
+            { shape: [[0,0],[1,0],[1,1]], w:2, h:2, name:"уголок" },
+            { shape: [[0,0],[0,1],[1,0]], w:2, h:2, name:"угол зерк" },
+            { shape: [[0,0],[0,1],[1,1]], w:2, h:2, name:"угол инверт" },
+            { shape: [[0,0],[0,1],[1,0],[1,1]], w:2, h:2, name:"блок 2x2" }
         ];
         
-        // Игровые параметры
-        let currentBlocks = [];   // массив из 3х объектов { shapeIndex, colorIndex, shapeMatrix }
-        let score = 0;
-        let totalCleared = 0;     // для счёта, сколько линий очищено
+        // Звуки (Web Audio API)
+        let audioCtx = null;
+        let soundEnabled = true;
         
-        let gameOverFlag = false;
-        
-        // Для выбора блока (активный блок для размещения)
-        let selectedBlockIndex = -1;
-        let hoverCell = null;      // { row, col }
-        
-        // Всплывающие уведомления
-        let toastMessage = "";
-        let toastTimer = 0;
-        
-        function showMessage(msg, duration = 1800) {
-            toastMessage = msg;
-            toastTimer = 40;
-            setTimeout(() => { if(toastMessage === msg) toastMessage = ""; }, duration);
+        function initAudio() {
+            if(audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
         
-        // Получить случайную форму блока
+        function playDropSound() {
+            if(!soundEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 220;
+                gain.gain.value = 0.15;
+                osc.type = "sine";
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
+                osc.stop(audioCtx.currentTime + 0.4);
+            } catch(e) { console.log("audio err"); }
+        }
+        
+        function playLineSound() {
+            if(!soundEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 440;
+                gain.gain.value = 0.2;
+                osc.type = "triangle";
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+                osc.stop(audioCtx.currentTime + 0.3);
+            } catch(e) {}
+        }
+        
+        function playGameOverSound() {
+            if(!soundEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 150;
+                gain.gain.value = 0.25;
+                osc.type = "sawtooth";
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.6);
+                osc.stop(audioCtx.currentTime + 0.6);
+            } catch(e) {}
+        }
+        
+        // Игровые переменные
+        let currentBlock = null;      // { shapeData, colorIndex, posX, posY (в сетке), falling, fallProgress, targetRow, startY }
+        let nextBlock = null;
+        let score = 0;
+        let level = 1;
+        let linesClearedTotal = 0;
+        let gameActive = true;
+        let fallAnimation = false;
+        let animProgress = 0;    // 0..1
+        let animStartY = 0;
+        let animTargetY = 0;
+        let currentFallingCol = 0;
+        
+        let requestId = null;
+        
+        // Генерация случайного блока
         function getRandomBlock() {
-            const idx = Math.floor(Math.random() * blockShapes.length);
-            const shapeData = blockShapes[idx];
+            const shapeIdx = Math.floor(Math.random() * blockShapes.length);
+            const shapeData = blockShapes[shapeIdx];
             const colorIdx = Math.floor(Math.random() * colorPalette.length);
-            // Создаём матрицу формы для упрощённой проверки
-            const maxRow = Math.max(...shapeData.shape.map(p => p[0]));
-            const maxCol = Math.max(...shapeData.shape.map(p => p[1]));
-            let matrix = Array(maxRow+1).fill().map(() => Array(maxCol+1).fill(false));
-            for(let p of shapeData.shape) {
-                matrix[p[0]][p[1]] = true;
-            }
             return {
-                shapeIndex: idx,
+                shape: shapeData.shape,
+                width: shapeData.w,
+                height: shapeData.h,
                 colorIndex: colorIdx,
-                shapeData: shapeData.shape,
-                matrix: matrix,
-                width: maxCol+1,
-                height: maxRow+1,
-                cellsCount: shapeData.cells
+                shapeObj: shapeData
             };
         }
         
-        // Инициализация новой партии блоков (три штуки)
-        function generateNewBlocks() {
-            currentBlocks = [];
-            for(let i=0; i<3; i++) {
-                currentBlocks.push(getRandomBlock());
+        function generateNextBlock() {
+            if(!nextBlock) {
+                nextBlock = getRandomBlock();
+            }
+            currentBlock = JSON.parse(JSON.stringify(nextBlock));
+            nextBlock = getRandomBlock();
+            // начальная позиция: по центру по горизонтали, вертикаль = 0
+            let startCol = Math.floor((cols - currentBlock.width) / 2);
+            if(startCol < 0) startCol = 0;
+            if(startCol + currentBlock.width > cols) startCol = cols - currentBlock.width;
+            currentBlock.posX = startCol;
+            currentBlock.posY = 0;
+            currentBlock.falling = true;
+            currentBlock.fallProgress = 0;
+            currentBlock.targetRow = null;
+            currentBlock.animating = false;
+            // проверка на проигрыш сразу
+            if(!canPlaceAt(currentBlock, currentBlock.posX, 0)) {
+                gameActive = false;
+                playGameOverSound();
             }
         }
         
-        // Проверка возможности размещения блока на поле
-        function canPlaceBlock(block, topRow, leftCol) {
-            for(let cell of block.shapeData) {
-                const r = topRow + cell[0];
-                const c = leftCol + cell[1];
-                if(r < 0 || r >= size || c < 0 || c >= size) return false;
-                if(grid[r][c] !== null) return false;
+        // Проверка возможности разместить блок в определённой позиции (по колонке X, Y)
+        function canPlaceAt(block, offsetX, offsetY) {
+            for(let cell of block.shape) {
+                let r = offsetY + cell[0];
+                let c = offsetX + cell[1];
+                if(r >= rows || c < 0 || c >= cols) return false;
+                if(r >= 0 && grid[r][c] !== null) return false;
+                if(r < 0) continue; // выше поля допустимо
             }
             return true;
         }
         
-        // Размещение блока на поле
-        function placeBlock(blockIndex, row, col) {
-            if(gameOverFlag) return false;
-            if(selectedBlockIndex === -1) return false;
-            const block = currentBlocks[selectedBlockIndex];
-            if(!block) return false;
-            if(canPlaceBlock(block, row, col)) {
-                // размещаем
-                for(let cell of block.shapeData) {
-                    const r = row + cell[0];
-                    const c = col + cell[1];
-                    grid[r][c] = block.colorIndex;
+        // Получить максимальную строку, куда упадёт блок в выбранной колонке (нажатие)
+        function getDropRowForColumn(block, targetCol) {
+            for(let row = 0; row <= rows; row++) {
+                if(!canPlaceAt(block, targetCol, row)) {
+                    return row - 1;
                 }
-                // удаляем использованный блок
-                currentBlocks.splice(selectedBlockIndex, 1);
-                // добавляем новый блок в конец
-                currentBlocks.push(getRandomBlock());
-                selectedBlockIndex = -1;
-                
-                // после размещения проверяем заполненные линии (строки и столбцы)
-                let cleared = clearFullLinesAndColumns();
-                if(cleared > 0) {
-                    totalCleared += cleared;
-                    // начисление очков: за каждую линию 25 * (количество линий в группе)
-                    let pointsEarned = cleared * 25;
-                    if(cleared >= 3) pointsEarned = Math.floor(pointsEarned * 1.5);
-                    if(cleared >= 5) pointsEarned = Math.floor(pointsEarned * 2);
-                    score += pointsEarned;
-                    showMessage(`+${pointsEarned} очков! Очищено ${cleared} линий`);
+            }
+            return rows - block.height;
+        }
+        
+        // Начать анимацию падения блока в указанную колонку
+        function startFallingToColumn(col) {
+            if(!gameActive) return false;
+            if(!currentBlock || !currentBlock.falling) return false;
+            // проверка, можно ли разместить блок в этой колонке
+            let possible = true;
+            for(let cell of currentBlock.shape) {
+                let c = col + cell[1];
+                if(c < 0 || c >= cols) { possible = false; break; }
+            }
+            if(!possible) return false;
+            
+            let targetRow = getDropRowForColumn(currentBlock, col);
+            if(targetRow < 0) return false;
+            
+            // анимируем
+            currentBlock.animating = true;
+            currentBlock.startY = currentBlock.posY;
+            currentBlock.targetY = targetRow;
+            currentBlock.animProgress = 0;
+            currentBlock.fallTargetCol = col;
+            currentBlock.posX = col;  // фиксируем колонку
+            
+            playDropSound();
+            return true;
+        }
+        
+        // Завершить падение и зафиксировать блок на сетке
+        function commitBlock() {
+            if(!currentBlock) return;
+            // размещаем блок в сетке
+            for(let cell of currentBlock.shape) {
+                let r = currentBlock.targetY + cell[0];
+                let c = currentBlock.posX + cell[1];
+                if(r >= 0 && r < rows && c >=0 && c < cols) {
+                    grid[r][c] = currentBlock.colorIndex;
                 }
-                
-                // проверим, есть ли доступные ходы у игрока
-                if(!hasAnyPossibleMove()) {
-                    gameOverFlag = true;
-                    showMessage("ИГРА ОКОНЧЕНА! Нажмите НОВАЯ ИГРА");
+            }
+            // проверить и очистить заполненные линии
+            let cleared = clearFullLines();
+            if(cleared > 0) {
+                linesClearedTotal += cleared;
+                let points = 100 * cleared * level;
+                if(cleared >= 4) points = Math.floor(points * 1.5);
+                score += points;
+                playLineSound();
+                // повышение уровня каждые 8 линий
+                let newLevel = 1 + Math.floor(linesClearedTotal / 8);
+                if(newLevel > level) {
+                    level = newLevel;
                 }
                 updateUI();
-                return true;
-            } else {
-                showMessage("Нельзя разместить блок здесь!");
-                return false;
+            }
+            // создать новый блок
+            generateNextBlock();
+            updateUI();
+            if(!gameActive) {
+                playGameOverSound();
             }
         }
         
-        // Очистка полностью заполненных строк и столбцов (как в Block Blast)
-        function clearFullLinesAndColumns() {
+        // Очистка полных строк и столбцов (как в Block Blast)
+        function clearFullLines() {
             let rowsToClear = [];
-            let colsToClear = [];
-            // проверка строк
-            for(let r=0; r<size; r++) {
+            for(let r=0; r<rows; r++) {
                 let full = true;
-                for(let c=0; c<size; c++) {
-                    if(grid[r][c] === null) { full = false; break; }
+                for(let c=0; c<cols; c++) {
+                    if(grid[r][c] === null) { full=false; break; }
                 }
                 if(full) rowsToClear.push(r);
             }
-            // проверка столбцов
-            for(let c=0; c<size; c++) {
-                let full = true;
-                for(let r=0; r<size; r++) {
-                    if(grid[r][c] === null) { full = false; break; }
-                }
-                if(full) colsToClear.push(c);
-            }
-            // очищаем строки
             for(let r of rowsToClear) {
-                for(let c=0; c<size; c++) grid[r][c] = null;
-            }
-            // очищаем столбцы
-            for(let c of colsToClear) {
-                for(let r=0; r<size; r++) grid[r][c] = null;
-            }
-            let totalClearedLines = rowsToClear.length + colsToClear.length;
-            if(totalClearedLines > 0) {
-                // Дополнительная анимация: просто сообщение
-            }
-            return totalClearedLines;
-        }
-        
-        // Проверяем, есть ли хотя бы одно место для любого из трёх блоков
-        function hasAnyPossibleMove() {
-            for(let idx=0; idx<currentBlocks.length; idx++) {
-                const block = currentBlocks[idx];
-                for(let r=0; r<size; r++) {
-                    for(let c=0; c<size; c++) {
-                        if(canPlaceBlock(block, r, c)) return true;
+                for(let c=0; c<cols; c++) grid[r][c] = null;
+                // сдвиг вниз
+                for(let rr=r; rr>0; rr--) {
+                    for(let c=0; c<cols; c++) {
+                        grid[rr][c] = grid[rr-1][c];
                     }
                 }
+                for(let c=0; c<cols; c++) grid[0][c] = null;
             }
-            return false;
-        }
-        
-        // Перезапуск игры
-        function resetGame() {
-            grid = Array(size).fill().map(() => Array(size).fill(null));
-            score = 0;
-            totalCleared = 0;
-            gameOverFlag = false;
-            selectedBlockIndex = -1;
-            generateNewBlocks();
-            updateUI();
-            showMessage("Новая игра! Размещай блоки, заполняй линии.");
+            return rowsToClear.length;
         }
         
         function updateUI() {
-            document.getElementById('scoreDisplay').innerText = score;
-            document.getElementById('comboDisplay').innerText = totalCleared;
-            draw();
+            document.getElementById('scoreValue').innerText = Math.floor(score);
+            document.getElementById('levelValue').innerText = level;
+            document.getElementById('linesValue').innerText = linesClearedTotal;
+            // отрисовать превью следующего блока
+            drawPreview();
         }
         
-        // Отрисовка игрового поля + панель предпросмотра блоков
+        function drawPreview() {
+            const previewDiv = document.getElementById('previewArea');
+            if(!nextBlock) return;
+            let str = "⬇️ СЛЕД.: ";
+            if(nextBlock.shapeObj.name) str += nextBlock.shapeObj.name;
+            else str += "блок";
+            previewDiv.innerHTML = str;
+        }
+        
+        // отрисовка всей сцены
         function draw() {
-            ctx.clearRect(0, 0, 450, 450);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             // сетка
-            for(let i=0; i<=size; i++) {
+            for(let i=0; i<=cols; i++) {
                 ctx.beginPath();
-                ctx.moveTo(i*cellSize, 0);
-                ctx.lineTo(i*cellSize, 450);
-                ctx.moveTo(0, i*cellSize);
-                ctx.lineTo(450, i*cellSize);
-                ctx.strokeStyle = "rgba(80, 160, 220, 0.35)";
+                ctx.moveTo(i*blockW, 0);
+                ctx.lineTo(i*blockW, canvas.height);
+                ctx.strokeStyle = "rgba(100,180,240,0.3)";
                 ctx.stroke();
             }
-            // блоки на поле
-            for(let r=0; r<size; r++) {
-                for(let c=0; c<size; c++) {
-                    const colorIdx = grid[r][c];
-                    if(colorIdx !== null) {
-                        ctx.fillStyle = colorPalette[colorIdx % colorPalette.length];
+            for(let i=0; i<=rows; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i*blockH);
+                ctx.lineTo(canvas.width, i*blockH);
+                ctx.stroke();
+            }
+            // статические блоки
+            for(let r=0; r<rows; r++) {
+                for(let c=0; c<cols; c++) {
+                    let val = grid[r][c];
+                    if(val !== null) {
+                        ctx.fillStyle = colorPalette[val % colorPalette.length];
                         ctx.shadowBlur = 3;
-                        ctx.fillRect(c*cellSize+1, r*cellSize+1, cellSize-2, cellSize-2);
-                        ctx.fillStyle = "rgba(255,255,200,0.3)";
-                        ctx.fillRect(c*cellSize+3, r*cellSize+3, cellSize-6, cellSize-6);
-                    } else if(hoverCell && hoverCell.row === r && hoverCell.col === c && selectedBlockIndex !== -1 && !gameOverFlag) {
-                        // подсветка ячейки под курсором
-                        ctx.fillStyle = "rgba(255,220,100,0.3)";
-                        ctx.fillRect(c*cellSize, r*cellSize, cellSize, cellSize);
+                        ctx.fillRect(c*blockW+1, r*blockH+1, blockW-2, blockH-2);
+                        ctx.fillStyle = "rgba(255,245,180,0.25)";
+                        ctx.fillRect(c*blockW+3, r*blockH+3, blockW-6, blockH-6);
                     }
+                }
+            }
+            // падающий блок с анимацией
+            if(currentBlock && gameActive) {
+                let drawY = currentBlock.posY;
+                if(currentBlock.animating && currentBlock.animProgress !== undefined) {
+                    let t = currentBlock.animProgress;
+                    drawY = currentBlock.startY + (currentBlock.targetY - currentBlock.startY) * t;
+                } else if(currentBlock.falling && !currentBlock.animating) {
+                    drawY = currentBlock.posY;
+                }
+                for(let cell of currentBlock.shape) {
+                    let x = (currentBlock.posX + cell[1]) * blockW;
+                    let y = (drawY + cell[0]) * blockH;
+                    ctx.fillStyle = colorPalette[currentBlock.colorIndex % colorPalette.length];
+                    ctx.fillRect(x+1, y+1, blockW-2, blockH-2);
+                    ctx.fillStyle = "rgba(255,240,150,0.5)";
+                    ctx.fillRect(x+3, y+3, blockW-6, blockH-6);
                 }
             }
             ctx.shadowBlur = 0;
-            
-            // Отрисовка трёх следующих блоков (справа или под полем) - нарисуем в правом нижнем углу канваса
-            const previewX = 320;
-            const previewY = 380;
-            ctx.font = "bold 12px monospace";
-            ctx.fillStyle = "#cdeeff";
-            ctx.fillText("ДОСТУПНЫЕ БЛОКИ:", 295, 30);
-            for(let i=0; i<currentBlocks.length; i++) {
-                const blk = currentBlocks[i];
-                const boxX = 310 + (i%3)*45;
-                const boxY = 45 + Math.floor(i/3)*55;
-                ctx.fillStyle = "#15222e";
-                ctx.fillRect(boxX-3, boxY-3, 42, 42);
-                ctx.strokeStyle = "#7fcdff";
-                ctx.strokeRect(boxX-3, boxY-3, 42, 42);
-                // рисуем миниатюру блока
-                const startX = boxX;
-                const startY = boxY;
-                const miniCell = 12;
-                for(let cell of blk.shapeData) {
-                    ctx.fillStyle = colorPalette[blk.colorIndex % colorPalette.length];
-                    ctx.fillRect(startX + cell[1]*miniCell, startY + cell[0]*miniCell, miniCell-1, miniCell-1);
-                }
-                if(selectedBlockIndex === i && !gameOverFlag) {
-                    ctx.beginPath();
-                    ctx.rect(boxX-5, boxY-5, 46, 46);
-                    ctx.strokeStyle = "gold";
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
-            }
-            
-            // game over overlay
-            if(gameOverFlag) {
+            if(!gameActive) {
                 ctx.globalAlpha = 0.7;
                 ctx.fillStyle = "#000000";
-                ctx.fillRect(0, 0, 450, 450);
+                ctx.fillRect(0,0,canvas.width,canvas.height);
                 ctx.globalAlpha = 1;
-                ctx.font = "bold 26px 'Orbitron'";
-                ctx.fillStyle = "#ffaa66";
-                ctx.shadowBlur = 0;
-                ctx.fillText("GAME OVER", 115, 220);
-                ctx.font = "14px monospace";
+                ctx.font = "bold 28px 'Orbitron'";
+                ctx.fillStyle = "#ffaa77";
+                ctx.fillText("GAME OVER", canvas.width/2-100, canvas.height/2);
+                ctx.font = "12px monospace";
                 ctx.fillStyle = "cyan";
-                ctx.fillText("нажмите НОВАЯ ИГРА", 150, 280);
-            }
-            
-            // всплывающее сообщение
-            if(toastMessage) {
-                ctx.font = "bold 14px monospace";
-                ctx.fillStyle = "#fff8e7";
-                ctx.shadowBlur = 2;
-                ctx.fillText(toastMessage, 20, 420);
+                ctx.fillText("нажмите НОВАЯ ИГРА", canvas.width/2-85, canvas.height/2+45);
             }
         }
         
-        // Обработка кликов по полю: выбор блока + размещение
-        function handleCanvasClick(e) {
-            if(gameOverFlag) return;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            let mouseX = (e.clientX - rect.left) * scaleX;
-            let mouseY = (e.clientY - rect.top) * scaleY;
-            const col = Math.floor(mouseX / cellSize);
-            const row = Math.floor(mouseY / cellSize);
-            if(row >=0 && row < size && col >=0 && col < size) {
-                if(selectedBlockIndex !== -1) {
-                    // размещаем выбранный блок
-                    const success = placeBlock(selectedBlockIndex, row, col);
-                    if(success) {
-                        updateUI();
-                    }
-                    selectedBlockIndex = -1;
-                } else {
-                    // возможно, клик по миниатюре блока? проверим координаты
-                    // зона предпросмотра блоков
-                    for(let i=0; i<currentBlocks.length; i++) {
-                        const boxX = 310 + (i%3)*45;
-                        const boxY = 45 + Math.floor(i/3)*55;
-                        if(mouseX >= boxX-3 && mouseX <= boxX+39 && mouseY >= boxY-3 && mouseY <= boxY+39) {
-                            selectedBlockIndex = i;
-                            updateUI();
-                            showMessage(`Выбран блок ${currentBlocks[i].shapeData.length}-клеточный`, 800);
-                            break;
-                        }
-                    }
-                }
+        // анимационный цикл
+        let lastTimestamp = 0;
+        function animate() {
+            if(!gameActive) {
                 draw();
-            } else {
-                // клик вне поля — сброс выбора
-                if(selectedBlockIndex !== -1) {
-                    selectedBlockIndex = -1;
-                    updateUI();
-                }
+                requestAnimationFrame(animate);
+                return;
             }
+            if(currentBlock && currentBlock.animating) {
+                let step = 0.12;
+                currentBlock.animProgress = (currentBlock.animProgress || 0) + step;
+                if(currentBlock.animProgress >= 1.0) {
+                    currentBlock.animProgress = 1.0;
+                    currentBlock.animating = false;
+                    currentBlock.posY = currentBlock.targetY;
+                    currentBlock.falling = false;
+                    commitBlock();
+                }
+            } else if(currentBlock && !currentBlock.animating && !currentBlock.falling) {
+                // блок только что зафиксирован, ждём следующий
+            } else if(currentBlock && currentBlock.falling && !currentBlock.animating) {
+                // нет активной анимации падения — блок просто висит, ожидая клика
+            }
+            draw();
+            requestAnimationFrame(animate);
         }
         
-        // движение мыши для подсветки ячейки
-        function handleMouseMove(e) {
-            if(gameOverFlag) return;
+        // Обработка клика по полю
+        function handleCanvasClick(e) {
+            if(!gameActive) return;
+            if(!currentBlock || currentBlock.animating) return;
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
             let mouseX = (e.clientX - rect.left) * scaleX;
-            let mouseY = (e.clientY - rect.top) * scaleY;
-            const col = Math.floor(mouseX / cellSize);
-            const row = Math.floor(mouseY / cellSize);
-            if(row >=0 && row < size && col >=0 && col < size) {
-                hoverCell = { row, col };
-            } else {
-                hoverCell = null;
+            let colIndex = Math.floor(mouseX / blockW);
+            if(colIndex >= 0 && colIndex < cols) {
+                startFallingToColumn(colIndex);
             }
-            draw();
         }
         
-        function leaveCanvas() {
-            hoverCell = null;
-            draw();
+        function resetGame() {
+            grid = Array(rows).fill().map(() => Array(cols).fill(null));
+            score = 0;
+            level = 1;
+            linesClearedTotal = 0;
+            gameActive = true;
+            nextBlock = getRandomBlock();
+            generateNextBlock();
+            updateUI();
+            playDropSound(); // символический старт
         }
         
-        // привязка событий
-        canvas.addEventListener('click', handleCanvasClick);
-        canvas.addEventListener('mousemove', handleMouseMove);
-        canvas.addEventListener('mouseleave', leaveCanvas);
-        document.getElementById('resetBtn').addEventListener('click', () => { resetGame(); draw(); });
-        document.getElementById('helpBtn').addEventListener('click', () => {
-            showMessage("ПРАВИЛА: кликни по блоку справа, затем по полю для размещения. Заполни строку или столбец целиком — получи очки!", 4000);
+        // звук тоггл
+        let soundBtn = document.getElementById('soundToggleBtn');
+        soundBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundBtn.innerText = soundEnabled ? "🔊 ЗВУК ВКЛ" : "🔇 ЗВУК ВЫКЛ";
         });
         
-        // запуск
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            resetGame();
+        });
+        canvas.addEventListener('click', handleCanvasClick);
+        
         resetGame();
-        draw();
+        animate();
+        // дополнительная инициализация аудио по первому клику
+        canvas.addEventListener('click', () => { initAudio(); }, { once: true });
     })();
 </script>
 </body>
