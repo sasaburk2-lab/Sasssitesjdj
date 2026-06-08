@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>White Site - Script Executor</title>
+    <title>White Site - Real Receiver</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: white; min-height: 100vh; padding: 40px 20px; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 40px; }
         #output { color: #000; font-family: monospace; font-size: 14px; line-height: 1.6; margin-top: 20px; }
+        #status { position: fixed; bottom: 10px; right: 10px; font-size: 11px; color: #0f0; background: #000; padding: 4px 8px; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="output"></div>
     </div>
+    <div id="status">● waiting for commands</div>
 
     <script>
         // ==========================================
@@ -22,6 +24,18 @@
         // ==========================================
         var SECRET_KEY = "1";
         var ORIGINAL_HTML = document.body.innerHTML;
+        
+        // ==========================================
+        // ОБНОВЛЕНИЕ СТАТУСА
+        // ==========================================
+        function updateStatus(text, isError) {
+            var statusDiv = document.getElementById('status');
+            statusDiv.textContent = text;
+            statusDiv.style.color = isError ? '#f00' : '#0f0';
+            setTimeout(function() {
+                if (!isError) statusDiv.textContent = '● ready';
+            }, 2000);
+        }
         
         // ==========================================
         // ФУНКЦИЯ СБРОСА
@@ -32,6 +46,7 @@
             line.textContent = 'Site has been reset';
             line.style.color = '#000000';
             document.getElementById('output').appendChild(line);
+            updateStatus('● reset complete');
         }
         
         // ==========================================
@@ -91,8 +106,10 @@
             try {
                 var func = new Function('api', scriptCode);
                 func(api);
+                updateStatus('● script executed');
                 return true;
             } catch(e) {
+                updateStatus('● error: ' + e.message, true);
                 return false;
             }
         }
@@ -127,23 +144,35 @@
         }
         
         // ==========================================
-        // ГЛАВНАЯ ФУНКЦИЯ
+        // ПРОВЕРКА НОВЫХ КОМАНД (КАЖДЫЕ 3 СЕКУНДЫ)
+        // ==========================================
+        function checkForCommands() {
+            fetch(window.location.href)
+                .then(function(response) { return response.text(); })
+                .catch(function(error) {});
+        }
+        
+        // ==========================================
+        // ГЛАВНАЯ ФУНКЦИЯ - ПРИНИМАЕТ ОТПРАВКИ
         // ==========================================
         function init() {
             var params = getUrlParams();
             
             if (!params.key && !params.cmd && !params.action) {
+                updateStatus('● ready for commands');
                 return;
             }
             
             if (params.key !== SECRET_KEY) {
                 document.body.innerHTML = '<h3>Wrong API key</h3><a href=".">Back</a>';
+                updateStatus('● wrong key', true);
                 return;
             }
             
             if (params.action === 'reset') {
                 resetSite();
-                document.body.innerHTML = '<h3>Site reset</h3><a href=".">Back</a>';
+                document.body.innerHTML = '<h3>Site reset</h3><a href=".">Back to site</a>';
+                updateStatus('● reset command received');
                 return;
             }
             
@@ -151,14 +180,17 @@
                 var decoded = decodeBase64(params.cmd);
                 if (decoded) {
                     executeScript(decoded);
-                    document.body.innerHTML = '<h3>Script executed</h3><a href=".">Back to site</a>';
+                    document.body.innerHTML = '<h3>Script received and executed</h3><a href=".">Back to site</a>';
+                    updateStatus('● script received');
                 } else {
                     document.body.innerHTML = '<h3>Decode error</h3><a href=".">Back</a>';
+                    updateStatus('● decode error', true);
                 }
                 return;
             }
         }
         
+        // ЗАПУСК
         init();
     </script>
 </body>
