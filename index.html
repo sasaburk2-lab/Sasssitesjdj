@@ -2,476 +2,570 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>White Chat - Ранги и API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Цветное Фрисби — Эпоха Ловли | долгая физическая игра</title>
     <style>
         * {
-            margin: 0;
-            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
+            margin: 0;
             min-height: 100vh;
+            background: radial-gradient(circle at 30% 10%, #0a1f2e, #03070f);
             display: flex;
             justify-content: center;
             align-items: center;
+            font-family: 'Segoe UI', 'Poppins', 'Orbitron', monospace;
             padding: 20px;
         }
-        
-        .chat-container {
-            width: 100%;
-            max-width: 800px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
+
+        /* Главный контейнер — как арена для фрисби */
+        .frisbee-arena {
+            background: rgba(0, 20, 30, 0.55);
+            backdrop-filter: blur(4px);
+            border-radius: 68px;
+            padding: 18px 22px 25px 22px;
+            box-shadow: 0 35px 55px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1);
+            border: 1px solid rgba(0, 255, 200, 0.35);
         }
-        
-        .chat-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 20px;
-            text-align: center;
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 42px;
+            box-shadow: 0 0 0 4px rgba(255, 180, 60, 0.4), 0 20px 40px rgba(0,0,0,0.5);
+            cursor: crosshair;
+            background: radial-gradient(ellipse at 30% 40%, #142c3c, #021016);
         }
-        
-        .chat-header h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        
-        .user-info {
-            background: #f0f0f0;
-            padding: 15px 20px;
+
+        /* Панель управления — спортивный стиль */
+        .score-panel {
+            margin-top: 22px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(12px);
+            padding: 10px 28px;
+            border-radius: 60px;
+            border: 1px solid rgba(0, 230, 200, 0.5);
         }
-        
-        .rank-badge {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
+
+        .stat-block {
+            background: #07121ec9;
+            padding: 6px 20px;
+            border-radius: 3rem;
             font-weight: bold;
-        }
-        
-        .rank-user {
-            background: #e0e0e0;
-            color: #666;
-        }
-        
-        .rank-creator {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            color: white;
-        }
-        
-        .username-input {
+            letter-spacing: 1px;
+            color: #e2f0ff;
+            text-shadow: 0 0 3px cyan;
+            font-size: 1.1rem;
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            align-items: baseline;
+            font-family: 'Orbitron', monospace;
         }
-        
-        .username-input input {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            outline: none;
+
+        .stat-block span:first-child {
+            color: #6efff0;
+            font-size: 0.8rem;
         }
-        
-        .username-input button {
-            padding: 8px 15px;
-            background: #667eea;
-            color: white;
+
+        .stat-block span:last-child {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #ffdd99;
+        }
+
+        .button-cluster {
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: linear-gradient(145deg, #1a2c3c, #0a121f);
             border: none;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-        
-        .chat-messages {
-            height: 400px;
-            overflow-y: auto;
-            padding: 20px;
-            background: #fafafa;
-        }
-        
-        .message {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
-        
-        .message-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: #667eea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-family: 'Orbitron', monospace;
             font-weight: bold;
-        }
-        
-        .message-content {
-            flex: 1;
-        }
-        
-        .message-header {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 5px;
-            font-size: 12px;
-        }
-        
-        .message-name {
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .message-rank {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-        
-        .message-time {
-            color: #999;
-        }
-        
-        .message-text {
-            color: #333;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        
-        .chat-input {
-            padding: 20px;
-            background: white;
-            border-top: 1px solid #ddd;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .chat-input input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 25px;
-            outline: none;
-        }
-        
-        .chat-input button {
-            padding: 12px 25px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 25px;
+            color: #c0ffff;
+            font-size: 0.95rem;
             cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 3px 8px black;
+            border: 1px solid #2d7f8a;
         }
-        
-        .api-status {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            font-size: 10px;
-            padding: 5px 10px;
-            background: #333;
-            color: #0f0;
-            border-radius: 10px;
+
+        .action-btn:hover {
+            transform: scale(1.02);
+            background: #1f4055;
+            color: white;
+            border-color: gold;
+            box-shadow: 0 0 12px aqua;
+        }
+
+        .complexity-tag {
+            background: #010d15;
+            padding: 6px 22px;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #bbffdd;
             font-family: monospace;
+            letter-spacing: 1px;
         }
-        
-        @media (max-width: 600px) {
-            .user-info {
-                flex-direction: column;
-                gap: 10px;
-            }
+
+        @media (max-width: 720px) {
+            .stat-block span:last-child { font-size: 1.2rem; }
+            .stat-block { padding: 4px 12px; }
+            .action-btn { padding: 5px 14px; font-size: 0.7rem; }
+            .score-panel { justify-content: center; }
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            <h1>💬 White Chat</h1>
-            <p>Чат с рангами и API управлением</p>
-        </div>
-        
-        <div class="user-info">
-            <div>
-                <span>👤 Ваш ранг: </span>
-                <span id="userRankBadge" class="rank-badge rank-user">Обычный</span>
+<div>
+    <div class="frisbee-arena">
+        <canvas id="gameCanvas" width="1100" height="650" style="width:100%; height:auto; max-width:1100px; aspect-ratio:1100/650"></canvas>
+        <div class="score-panel">
+            <div class="stat-block"><span>🏆 ОЧКИ ЛОВКОСТИ</span> <span id="catchScore">0</span></div>
+            <div class="stat-block"><span>🌀 РАУНД ЭЙРА</span> <span id="waveLevel">1</span></div>
+            <div class="stat-block"><span>⚡ ЦВЕТОВОЙ РИТМ</span> <span id="rhythmBonus">1.0x</span></div>
+            <div class="complexity-tag" id="eraName">ЭПОХА СТАРТА</div>
+            <div class="button-cluster">
+                <button class="action-btn" id="resetBtn">♻️ НОВАЯ ИГРА</button>
+                <button class="action-btn" id="infoBtn">📜 ЗНАНИЕ ПОЛЁТА</button>
             </div>
-            <div class="username-input">
-                <input type="text" id="username" placeholder="Ваше имя" maxlength="20">
-                <button onclick="setUsername()">Установить</button>
-            </div>
-        </div>
-        
-        <div class="chat-messages" id="chatMessages">
-            <div class="message">
-                <div class="message-avatar">🤖</div>
-                <div class="message-content">
-                    <div class="message-header">
-                        <span class="message-name">Система</span>
-                        <span class="message-rank" style="background:#999;color:white;">бот</span>
-                    </div>
-                    <div class="message-text">Добро пожаловать в чат! Введите имя чтобы начать.</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="chat-input">
-            <input type="text" id="messageInput" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <button onclick="sendMessage()">Отправить</button>
         </div>
     </div>
-    
-    <div class="api-status" id="apiStatus">● API готов</div>
+</div>
 
-    <script>
-        // ==========================================
-        // НАСТРОЙКИ
-        // ==========================================
-        const SECRET_KEY = "creator_key_123";
-        let currentUser = {
-            name: "Гость",
-            rank: "user"
-        };
+<script>
+    (function(){
+        // ----------------------------------------------------------------
+        // ИГРА: ЦВЕТНОЕ ФРИСБИ — ДОЛГАЯ ФИЗИЧЕСКАЯ ЭПОПЕЯ
+        // Механика: по арене летают цветные диски (фрисби) с физикой отскока.
+        // Игрок кликает (ловит) диски → каждый пойманный диск даёт очки,
+        // плюс активирует познавательные фразы о цветах. Прогрессия бесконечная:
+        // каждые +150 очков новый «раунд эйра» — скорость полёта растёт,
+        // размер дисков может меняться, появляются новые цвета.
+        // Есть система комбо: если ловить быстро подряд — множитель растёт.
+        // Долгая игра с нарастающей сложностью, физика отскока, эффекты.
+        // ----------------------------------------------------------------
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = 1100, height = 650;
+        canvas.width = width;
+        canvas.height = height;
+
+        // ----- ПАРАМЕТРЫ ДОЛГОЙ ИГРЫ -----
+        let score = 0;
+        let wave = 1;            // раунд (уровень сложности)
+        let comboMultiplier = 1.0;
+        let lastCatchFrame = 0;
+        let frameCounter = 0;
         
-        let messages = [];
+        // список активных дисков (фрисби)
+        let discs = [];
         
-        // ==========================================
-        // ЗАГРУЗКА СООБЩЕНИЙ
-        // ==========================================
-        function loadMessages() {
-            const saved = localStorage.getItem('chat_messages');
-            if (saved) {
-                messages = JSON.parse(saved);
-                renderMessages();
-            }
+        // базовая скорость при wave = 1
+        let baseSpeed = 1.2;
+        
+        // максимальное количество дисков на поле (плавно растёт)
+        let maxDiscs = 3;
+        
+        // цветовая палитра (расширяемая с ростом волны)
+        const colorLibrary = [
+            { name: "Лазурный", code: "#3a86ff", wisdom: "Лазурный фрисби — поток ясности, укрепляет концентрацию." },
+            { name: "Изумрудный", code: "#2ecc71", wisdom: "Изумрудный диск дарит равновесие и природную гармонию." },
+            { name: "Алый", code: "#e74c3c", wisdom: "Алый цвет — энергия рывка, реакция становится острее." },
+            { name: "Золотой", code: "#f1c40f", wisdom: "Золотой фрисби — символ мастерства и интуиции." },
+            { name: "Огненный", code: "#e67e22", wisdom: "Огненный диск разжигает страсть к победе." },
+            { name: "Аметист", code: "#9b59b6", wisdom: "Аметистовый полёт углубляет мудрость движений." },
+            { name: "Розовый закат", code: "#ff66b2", wisdom: "Оттенок эмпатии, учит читать траектории." },
+            { name: "Бронза", code: "#cd7f32", wisdom: "Бронзовый диск — надёжность и упорство." },
+            { name: "Серебряный бриз", code: "#b0c4de", wisdom: "Серебряный развивает стратегическое мышление." },
+            { name: "Платиновый", code: "#e5e4e2", wisdom: "Платина — вершина ловкости, холодный расчёт." },
+            { name: "Чёрный опал", code: "#2d2d2d", wisdom: "Опал хранит тайны непредсказуемых отскоков." },
+            { name: "Жемчужный", code: "#fdf5e6", wisdom: "Жемчуг дарит чистоту восприятия траектории." },
+            { name: "Индиго", code: "#4b0082", wisdom: "Индиго усиливает воображение и предвидение." },
+            { name: "Янтарный", code: "#FFBF69", wisdom: "Янтарь — древняя мудрость ритма." },
+            { name: "Коралловый риф", code: "#f97f51", wisdom: "Коралл учит адаптироваться к переменам." },
+            { name: "Мятный шторм", code: "#55efc4", wisdom: "Мятный диск приносит свежесть решений." }
+        ];
+        
+        // сколько цветов доступно в текущей волне (волна открывает новые)
+        let availableColorsCount = 3;  // старт с 3 цветов
+        
+        function getActiveColors() {
+            let maxColors = Math.min(availableColorsCount, colorLibrary.length);
+            return colorLibrary.slice(0, maxColors);
         }
         
-        function saveMessages() {
-            localStorage.setItem('chat_messages', JSON.stringify(messages));
+        // обновление доступных цветов в зависимости от волны (долгое открытие)
+        function updateColorsByWave() {
+            // каждые 2 волны +1 новый цвет, вплоть до максимума
+            let newCount = 3 + Math.floor(wave / 2);
+            if(newCount > colorLibrary.length) newCount = colorLibrary.length;
+            availableColorsCount = newCount;
         }
         
-        // ==========================================
-        // ОТОБРАЖЕНИЕ СООБЩЕНИЙ
-        // ==========================================
-        function renderMessages() {
-            const container = document.getElementById('chatMessages');
-            container.innerHTML = '';
+        // функция генерации нового диска с физикой
+        function createDisc(avoidOverlap = true) {
+            const activeColors = getActiveColors();
+            if(activeColors.length === 0) return null;
+            const colorIndex = Math.floor(Math.random() * activeColors.length);
+            const discColor = activeColors[colorIndex];
             
-            messages.forEach(msg => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message';
-                
-                const rankClass = msg.rank === 'creator' ? 'rank-creator' : 'rank-user';
-                const rankName = msg.rank === 'creator' ? 'СОЗДАТЕЛЬ' : 'Пользователь';
-                const rankColor = msg.rank === 'creator' ? '#f5576c' : '#999';
-                
-                messageDiv.innerHTML = `
-                    <div class="message-avatar" style="background: ${msg.rank === 'creator' ? '#f5576c' : '#667eea'}">
-                        ${msg.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div class="message-content">
-                        <div class="message-header">
-                            <span class="message-name">${escapeHtml(msg.name)}</span>
-                            <span class="message-rank" style="background:${rankColor};color:white;">${rankName}</span>
-                            <span class="message-time">${msg.time}</span>
-                        </div>
-                        <div class="message-text">${escapeHtml(msg.text)}</div>
-                    </div>
-                `;
-                container.appendChild(messageDiv);
-            });
+            // радиус: от 22 до 38, с уменьшением на высоких волнах (чуть сложнее)
+            let radius = 26 - Math.min(8, Math.floor(wave / 8));
+            if(radius < 16) radius = 16;
             
-            container.scrollTop = container.scrollHeight;
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // ==========================================
-        // ОТПРАВКА СООБЩЕНИЯ
-        // ==========================================
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            
-            if (!text) return;
-            if (currentUser.name === "Гость") {
-                alert("Сначала установите имя!");
-                return;
-            }
-            
-            addMessage(currentUser.name, text, currentUser.rank);
-            input.value = '';
-        }
-        
-        function addMessage(name, text, rank) {
-            const message = {
-                name: name,
-                text: text,
-                rank: rank,
-                time: new Date().toLocaleTimeString()
-            };
-            messages.push(message);
-            saveMessages();
-            renderMessages();
-        }
-        
-        // ==========================================
-        // УСТАНОВКА ИМЕНИ
-        // ==========================================
-        function setUsername() {
-            const input = document.getElementById('username');
-            const name = input.value.trim();
-            
-            if (!name) {
-                alert("Введите имя!");
-                return;
+            let x, y, overlap = true;
+            let attempts = 0;
+            while(overlap && attempts < 40) {
+                x = radius + Math.random() * (width - radius * 2);
+                y = radius + Math.random() * (height - radius * 2);
+                overlap = false;
+                if(avoidOverlap) {
+                    for(let d of discs) {
+                        const dx = d.x - x;
+                        const dy = d.y - y;
+                        const dist = Math.hypot(dx, dy);
+                        if(dist < (d.radius + radius + 18)) {
+                            overlap = true;
+                            break;
+                        }
+                    }
+                }
+                attempts++;
             }
             
-            currentUser.name = name;
-            updateUserInfo();
-            input.value = '';
+            // скорость зависит от волны + случайный вектор
+            let spd = baseSpeed + (wave - 1) * 0.35;
+            if(spd > 6.2) spd = 6.2;
+            let angle = Math.random() * Math.PI * 2;
+            let vx = Math.cos(angle) * (spd + Math.random() * 1.2);
+            let vy = Math.sin(angle) * (spd + Math.random() * 1.2);
             
-            addMessage("Система", `${name} присоединился к чату`, "system");
-        }
-        
-        function updateUserInfo() {
-            const badge = document.getElementById('userRankBadge');
-            if (currentUser.rank === 'creator') {
-                badge.textContent = 'СОЗДАТЕЛЬ';
-                badge.className = 'rank-badge rank-creator';
-            } else {
-                badge.textContent = 'Обычный';
-                badge.className = 'rank-badge rank-user';
-            }
-        }
-        
-        // ==========================================
-        // API ДЛЯ СОЗДАТЕЛЯ
-        // ==========================================
-        function apiSendMessage(name, text) {
-            addMessage(name, text, 'creator');
-            return { success: true, message: "Message sent" };
-        }
-        
-        function apiClearChat() {
-            messages = [];
-            saveMessages();
-            renderMessages();
-            addMessage("Система", "Чат очищен создателем", "system");
-            return { success: true, message: "Chat cleared" };
-        }
-        
-        function apiSetCreator() {
-            currentUser.rank = 'creator';
-            updateUserInfo();
-            addMessage("Система", `${currentUser.name} теперь имеет ранг СОЗДАТЕЛЯ!`, "system");
-            return { success: true, message: "Creator rank granted" };
-        }
-        
-        // ==========================================
-        // ПОЛУЧЕНИЕ API ПАРАМЕТРОВ
-        // ==========================================
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
             return {
-                key: params.get('key'),
-                action: params.get('action'),
-                name: params.get('name'),
-                text: params.get('text')
+                x: x, y: y, radius: radius,
+                vx: vx, vy: vy,
+                colorCode: discColor.code,
+                colorName: discColor.name,
+                wisdom: discColor.wisdom,
+                colorIndex: colorIndex
             };
         }
         
-        function decodeBase64(str) {
-            try { return atob(str); } catch(e) { return null; }
-        }
-        
-        // ==========================================
-        // ОБРАБОТКА API ЗАПРОСОВ
-        // ==========================================
-        function handleAPI() {
-            const params = getUrlParams();
-            
-            if (!params.key) return;
-            
-            if (params.key !== SECRET_KEY) {
-                document.body.innerHTML = '<div style="text-align:center;padding:50px;"><h2>❌ Неверный API ключ</h2><a href=".">Вернуться в чат</a></div>';
-                return;
+        // наполнение арены дисками
+        function populateDiscs() {
+            discs = [];
+            let targetCount = maxDiscs + Math.floor(wave / 5);
+            if(targetCount > 12) targetCount = 12;
+            for(let i=0; i<targetCount; i++) {
+                let disc = createDisc(true);
+                if(disc) discs.push(disc);
             }
-            
-            let result = {};
-            
-            if (params.action === 'send' && params.name && params.text) {
-                const name = decodeBase64(params.name) || params.name;
-                const text = decodeBase64(params.text) || params.text;
-                result = apiSendMessage(name, text);
-            }
-            else if (params.action === 'clear') {
-                result = apiClearChat();
-            }
-            else if (params.action === 'setcreator' && params.name) {
-                const name = decodeBase64(params.name) || params.name;
-                currentUser.name = name;
-                result = apiSetCreator();
-            }
-            else {
-                result = { success: false, message: "Unknown action" };
-            }
-            
-            document.body.innerHTML = `
-                <div style="text-align:center;padding:50px;">
-                    <h2 style="color:${result.success ? '#0f0' : '#f00'}">${result.success ? '✅' : '❌'} API ${result.success ? 'Успех' : 'Ошибка'}</h2>
-                    <p>${result.message}</p>
-                    <br>
-                    <a href="." style="color:#667eea;">← Вернуться в чат</a>
-                </div>
-            `;
-        }
-        
-        // ==========================================
-        // ЗАГРУЗКА ПОЛЬЗОВАТЕЛЯ
-        // ==========================================
-        function loadUser() {
-            const saved = localStorage.getItem('chat_user');
-            if (saved) {
-                const user = JSON.parse(saved);
-                currentUser.name = user.name;
-                currentUser.rank = user.rank;
-                updateUserInfo();
-                document.getElementById('username').placeholder = currentUser.name;
+            if(discs.length === 0 && targetCount>0) {
+                discs.push(createDisc(false));
             }
         }
         
-        function saveUser() {
-            localStorage.setItem('chat_user', JSON.stringify({
-                name: currentUser.name,
-                rank: currentUser.rank
-            }));
+        // физика отскока от стен + границы
+        function updatePhysics() {
+            for(let d of discs) {
+                d.x += d.vx;
+                d.y += d.vy;
+                // отскок от границ с сохранением энергии
+                if(d.x - d.radius <= 0) { d.x = d.radius; d.vx = -d.vx; }
+                if(d.x + d.radius >= width) { d.x = width - d.radius; d.vx = -d.vx; }
+                if(d.y - d.radius <= 0) { d.y = d.radius; d.vy = -d.vy; }
+                if(d.y + d.radius >= height) { d.y = height - d.radius; d.vy = -d.vy; }
+                
+                // лёгкое трение для стабильности (почти незаметно)
+                d.vx *= 0.999;
+                d.vy *= 0.999;
+            }
         }
         
-        // ==========================================
-        // ЗАПУСК
-        // ==========================================
-        loadMessages();
-        loadUser();
+        // Обработка ловли (клик по диску) -> главная механика фрисби
+        let lastComboTime = 0;
+        let comboCounter = 0;
         
-        setInterval(() => {
-            saveMessages();
-            saveUser();
-        }, 5000);
+        function catchDisc(disc, mouseX, mouseY) {
+            // проверка попадания по радиусу
+            const dx = disc.x - mouseX;
+            const dy = disc.y - mouseY;
+            const dist = Math.hypot(dx, dy);
+            if(dist <= disc.radius) {
+                // ловля!
+                let currentFrame = frameCounter;
+                if(currentFrame - lastComboTime < 35) {  // быстрая серия
+                    comboCounter++;
+                    if(comboCounter > 12) comboCounter = 12;
+                    comboMultiplier = 1.0 + (comboCounter * 0.12);
+                } else {
+                    comboCounter = 1;
+                    comboMultiplier = 1.12;
+                }
+                lastComboTime = currentFrame;
+                
+                let baseReward = 10 + Math.floor(wave * 1.2);
+                let finalReward = Math.floor(baseReward * comboMultiplier);
+                score += finalReward;
+                
+                // Обновляем отображение множителя
+                document.getElementById('rhythmBonus').innerText = comboMultiplier.toFixed(1) + "x";
+                
+                // показываем познавательную мудрость с эффектом
+                showFloatingWisdom(`+${finalReward} | ${disc.wisdom}`, disc.x, disc.y-12);
+                
+                // увеличиваем счётчик, проверяем повышение волны
+                updateWaveProgression();
+                
+                // удаляем пойманный диск и создаём новый на его месте (бесконечный поток)
+                const index = discs.indexOf(disc);
+                if(index !== -1) {
+                    discs.splice(index, 1);
+                    let newDisc = createDisc(true);
+                    if(newDisc) discs.push(newDisc);
+                    else {
+                        // подстраховка
+                        discs.push(createDisc(false));
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
         
-        handleAPI();
-    </script>
+        // долгая прогрессия волн (раундов)
+        function updateWaveProgression() {
+            let newWave = 1 + Math.floor(score / 180);
+            if(newWave < 1) newWave = 1;
+            if(newWave > wave) {
+                wave = newWave;
+                // при повышении волны увеличиваем сложность, обновляем палитру
+                updateColorsByWave();
+                // увеличиваем максимальное количество дисков плавно
+                let newMaxDiscs = 3 + Math.floor(wave / 4);
+                if(newMaxDiscs > 12) newMaxDiscs = 12;
+                maxDiscs = newMaxDiscs;
+                // подстраиваем количество дисков под новый максимум
+                while(discs.length < maxDiscs && discs.length < 14) {
+                    let nd = createDisc(true);
+                    if(nd) discs.push(nd);
+                }
+                // иногда удаляем лишние, если перебор
+                while(discs.length > maxDiscs + 2) discs.pop();
+                
+                // обновление текста эпохи
+                let eraText = "ЭПОХА СТАРТА";
+                if(wave>=3 && wave<7) eraText = "ВЕТРЕНЫЙ РАУНД";
+                else if(wave>=7 && wave<12) eraText = "ТУРБУЛЕНТНОСТЬ";
+                else if(wave>=12 && wave<20) eraText = "МАСТЕРСКАЯ ЛОВЛЯ";
+                else if(wave>=20) eraText = "ЛЕГЕНДАРНЫЙ ПОЛЁТ";
+                document.getElementById('eraName').innerText = eraText;
+                
+                // визуальное уведомление
+                showToastMessage(`НОВЫЙ РАУНД ${wave}! Скорость повышена. Доступно цветов: ${availableColorsCount}`);
+            }
+            document.getElementById('waveLevel').innerText = wave;
+        }
+        
+        // всплывающие сообщения (познавательные)
+        let activePopups = [];
+        function showFloatingWisdom(text, x, y) {
+            activePopups.push({ text: text, x: x, y: y, life: 85 });
+        }
+        
+        function showToastMessage(msg, duration = 2100) {
+            let toastDiv = document.getElementById('dynamicToast');
+            if(!toastDiv) {
+                toastDiv = document.createElement('div');
+                toastDiv.id = 'dynamicToast';
+                toastDiv.style.position = 'fixed';
+                toastDiv.style.bottom = '40px';
+                toastDiv.style.left = '50%';
+                toastDiv.style.transform = 'translateX(-50%)';
+                toastDiv.style.background = '#0e1f2cee';
+                toastDiv.style.backdropFilter = 'blur(12px)';
+                toastDiv.style.borderLeft = '5px solid #f5b042';
+                toastDiv.style.padding = '12px 28px';
+                toastDiv.style.borderRadius = '60px';
+                toastDiv.style.fontFamily = 'monospace';
+                toastDiv.style.fontWeight = 'bold';
+                toastDiv.style.color = '#f0fcff';
+                toastDiv.style.zIndex = '2000';
+                toastDiv.style.fontSize = '0.9rem';
+                toastDiv.style.whiteSpace = 'nowrap';
+                toastDiv.style.pointerEvents = 'none';
+                document.body.appendChild(toastDiv);
+            }
+            toastDiv.style.opacity = '0';
+            toastDiv.textContent = msg;
+            toastDiv.style.opacity = '1';
+            setTimeout(() => {
+                if(toastDiv) toastDiv.style.opacity = '0';
+            }, duration);
+        }
+        
+        // отрисовка всего: красочные фрисби-диски, тени, градиенты
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // стилизованное поле (линии травы/арены)
+            ctx.save();
+            for(let i=0; i<width+height; i+=40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i+20, height);
+                ctx.strokeStyle = "rgba(30, 180, 210, 0.08)";
+                ctx.stroke();
+            }
+            // круги в центре
+            ctx.beginPath();
+            ctx.arc(width/2, height/2, 120, 0, Math.PI*2);
+            ctx.strokeStyle = "rgba(255,200,100,0.35)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            for(let d of discs) {
+                // тень диска
+                ctx.shadowColor = "rgba(0,0,0,0.5)";
+                ctx.shadowBlur = 10;
+                // градиент для объёма, как у фрисби
+                let grad = ctx.createRadialGradient(d.x-5, d.y-5, 5, d.x, d.y, d.radius);
+                grad.addColorStop(0, d.colorCode);
+                grad.addColorStop(1, this.shadeColor? this.shadeColor(d.colorCode, -20) : d.colorCode);
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.radius, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = "rgba(255,245,180,0.7)";
+                ctx.lineWidth = 1.8;
+                ctx.stroke();
+                // внутренний ободок
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.radius-4, 0, Math.PI*2);
+                ctx.strokeStyle = "rgba(255,255,210,0.5)";
+                ctx.stroke();
+                // маленький блик
+                ctx.beginPath();
+                ctx.arc(d.x-4, d.y-4, 5, 0, Math.PI*2);
+                ctx.fillStyle = "rgba(255,255,245,0.3)";
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            
+            // отрисовка всплывающей мудрости
+            for(let i=0; i<activePopups.length; i++) {
+                let p = activePopups[i];
+                ctx.font = "bold 15px 'Segoe UI', 'Orbitron', monospace";
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = `rgba(255, 240, 180, ${Math.min(1, p.life/40)})`;
+                ctx.shadowColor = "black";
+                ctx.fillText(p.text, p.x-70, p.y - p.life/2);
+                p.life -= 2.2;
+                p.y -= 0.8;
+                if(p.life <= 0) activePopups.splice(i,1);
+            }
+            ctx.restore();
+            
+            // дополнительная информация в углу
+            ctx.font = "12px monospace";
+            ctx.fillStyle = "#aaf0ff";
+            ctx.shadowBlur = 0;
+            ctx.fillText("кликни по любому диску — поймай фрисби", 20, 35);
+            ctx.fillText(`цветов в игре: ${availableColorsCount}`, width-180, 40);
+        }
+        
+        // утилита затемнения цвета (приведение к стилю)
+        function shadeColor(col, amt) {
+            return col; // упрощённо, но оставим для градиента
+        }
+        
+        // инициализация игры (полный сброс)
+        function initGame() {
+            score = 0;
+            wave = 1;
+            comboMultiplier = 1.0;
+            comboCounter = 0;
+            lastComboTime = 0;
+            availableColorsCount = 3;
+            baseSpeed = 1.2;
+            maxDiscs = 3;
+            document.getElementById('catchScore').innerText = "0";
+            document.getElementById('waveLevel').innerText = "1";
+            document.getElementById('rhythmBonus').innerText = "1.0x";
+            document.getElementById('eraName').innerText = "ЭПОХА СТАРТА";
+            updateColorsByWave();
+            populateDiscs();
+            frameCounter = 0;
+            activePopups = [];
+            showToastMessage("Новая игра! Лови цветные диски, узнавай мудрость.");
+        }
+        
+        // обработка кликов по canvas (ловля фрисби)
+        function handleCanvasClick(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let mouseX = (e.clientX - rect.left) * scaleX;
+            let mouseY = (e.clientY - rect.top) * scaleY;
+            mouseX = Math.min(width, Math.max(0, mouseX));
+            mouseY = Math.min(height, Math.max(0, mouseY));
+            
+            // проходим с конца (верхние слои визуально не важны, ловим любой диск)
+            for(let i=discs.length-1; i>=0; i--) {
+                if(catchDisc(discs[i], mouseX, mouseY)) {
+                    // обновление счета
+                    document.getElementById('catchScore').innerText = Math.floor(score);
+                    break;
+                }
+            }
+        }
+        
+        // анимационный цикл (физика + рендер)
+        let animationId = null;
+        function gameLoop() {
+            frameCounter++;
+            updatePhysics();
+            // динамическое добавление дисков при сильном уменьшении
+            if(discs.length < maxDiscs && discs.length < 13) {
+                let newD = createDisc(true);
+                if(newD) discs.push(newD);
+            }
+            if(discs.length === 0) {
+                for(let i=0;i<3;i++) discs.push(createDisc(false));
+            }
+            // Обновить отображение очков
+            document.getElementById('catchScore').innerText = Math.floor(score);
+            draw();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        canvas.addEventListener('click', handleCanvasClick);
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            initGame();
+        });
+        document.getElementById('infoBtn').addEventListener('click', () => {
+            showToastMessage("ФРИСБИ-МУДРОСТЬ: каждый цвет даёт знание. Чем выше раунд — быстрее диски и больше оттенков. Лови ритм!");
+        });
+        
+        // запуск
+        initGame();
+        gameLoop();
+    })();
+</script>
 </body>
 </html>
