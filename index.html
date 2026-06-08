@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>⛏️ Шахтёрская Империя | Копай вниз, открывай шахты</title>
+    <title>⛏️ Шахтёрская Империя | Престиж и Админ-Панель</title>
     <style>
         * {
             user-select: none;
@@ -20,10 +20,9 @@
             align-items: center;
             font-family: 'Courier New', 'Minecraft', 'Segoe UI', monospace;
             padding: 10px;
-            touch-action: pan-x pan-y; /* разрешаем скролл для листания */
+            touch-action: pan-x pan-y;
         }
 
-        /* контейнер — адаптивный под телефон */
         .game-wrapper {
             background: #1a1f2a;
             border-radius: 32px;
@@ -36,7 +35,6 @@
             margin: 0 auto;
         }
 
-        /* верхняя панель */
         .top-bar {
             background: #0a0f12e6;
             backdrop-filter: blur(10px);
@@ -68,16 +66,8 @@
             font-size: 1rem;
         }
 
-        .stat-card span:first-child {
-            color: #aaffaa;
-            font-size: 0.7rem;
-        }
-
-        .stat-card span:last-child {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: #ffcc44;
-        }
+        .stat-card span:first-child { color: #aaffaa; font-size: 0.7rem; }
+        .stat-card span:last-child { font-size: 1.4rem; font-weight: 800; color: #ffcc44; }
 
         button {
             background: linear-gradient(145deg, #2a2a1a, #1a1a0a);
@@ -92,21 +82,10 @@
             transition: 0.05s linear;
             touch-action: manipulation;
         }
+        button:active { transform: scale(0.96); }
 
-        button:active {
-            transform: scale(0.96);
-        }
+        .depth-badge { background: #0a0a00cc; padding: 5px 14px; border-radius: 40px; font-size: 0.7rem; font-weight: bold; color: #88ffaa; }
 
-        .depth-badge {
-            background: #0a0a00cc;
-            padding: 5px 14px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            color: #88ffaa;
-        }
-
-        /* Canvas — поле для копания */
         canvas {
             display: block;
             margin: 0;
@@ -117,7 +96,6 @@
             height: auto;
         }
 
-        /* Нижняя панель с кнопками листания и магазином */
         .bottom-panel {
             background: #0a0f12e6;
             backdrop-filter: blur(10px);
@@ -131,34 +109,43 @@
             border-radius: 0 0 28px 28px;
         }
 
-        .scroll-buttons {
-            display: flex;
-            gap: 20px;
-            background: #00000088;
-            padding: 6px 16px;
-            border-radius: 50px;
+        .scroll-buttons { display: flex; gap: 20px; background: #00000088; padding: 6px 16px; border-radius: 50px; }
+        .scroll-btn { background: #2a3a2a; border: 1px solid #8a7a4a; padding: 8px 22px; font-size: 1.1rem; border-radius: 40px; font-weight: bold; }
+        .shop-btn { background: #3a2a1a; border-color: #ffaa44; padding: 8px 18px; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
-
-        .scroll-btn {
-            background: #2a3a2a;
-            border: 1px solid #8a7a4a;
-            padding: 8px 22px;
-            font-size: 1.1rem;
-            border-radius: 40px;
-            font-weight: bold;
+        .modal-content {
+            background: #1a1f2a;
+            border: 3px solid #d4a55a;
+            border-radius: 32px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            color: #ffdd88;
         }
-
-        .shop-btn {
-            background: #3a2a1a;
-            border-color: #ffaa44;
-            padding: 8px 18px;
+        .modal-content button {
+            margin: 8px;
+            width: calc(100% - 20px);
+        }
+        .close {
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
         }
 
         @media (max-width: 550px) {
             .stat-card span:last-child { font-size: 1rem; }
-            .stat-card { padding: 4px 10px; }
             .scroll-btn { padding: 6px 16px; font-size: 0.9rem; }
-            button { padding: 6px 12px; font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -168,6 +155,7 @@
         <div class="stats">
             <div class="stat-card"><span>🪙 МОНЕТЫ</span> <span id="coinDisplay">0</span></div>
             <div class="stat-card"><span>📏 ГЛУБИНА</span> <span id="depthDisplay">0</span></div>
+            <div class="stat-card"><span>🏆 УРОВЕНЬ</span> <span id="levelDisplay">1</span></div>
             <div class="depth-badge" id="biomeBadge">🌿 ЛЕСНАЯ ШАХТА</div>
         </div>
         <button id="resetBtn">🔄 НОВАЯ ИГРА</button>
@@ -178,21 +166,16 @@
             <button class="scroll-btn" id="scrollUpBtn">▲ ВВЕРХ</button>
             <button class="scroll-btn" id="scrollDownBtn">▼ ВНИЗ</button>
         </div>
-        <button class="shop-btn" id="shopBtn">🏪 МАГАЗИН / ОТКРЫТЬ ШАХТЫ</button>
+        <button class="shop-btn" id="shopBtn">🏪 МАГАЗИН</button>
     </div>
 </div>
 
 <script>
     (function(){
-        // --------------------------------------------------------------
-        // ПОЛНОЦЕННЫЙ СИМУЛЯТОР ШАХТЁРА ДЛЯ ТЕЛЕФОНА
-        // - Копаем блоки пальцем (анимация треска)
-        // - Листаем глубину кнопками / свайпом
-        // - Открываем новые шахты за монеты (каждая даёт бонус к ценности)
-        // - Улучшения: сила кирки, скорость, шанс редкости
-        // - Сохранение в localStorage
-        // --------------------------------------------------------------
-        
+        // ==========================================
+        // НАСТРОЙКИ
+        // ==========================================
+        const SECRET_KEY = "admin_key_123";
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
@@ -200,61 +183,46 @@
         canvas.width = size;
         canvas.height = size;
         
-        const BLOCK_SIZE = 50;  // 10x10 блоков видно
-        
-        // Камера (глубина)
-        let cameraDepth = 0;     // смещение по Y (какие блоки видим)
-        let playerDepth = 15;     // глубина игрока (старт)
-        
-        // Бесконечный мир (Map)
+        const BLOCK_SIZE = 50;
+        let cameraDepth = 0;
+        let playerDepth = 15;
         let world = new Map();
         
-        // Экономика
-        let coins = 100;          // стартовые монеты
+        let coins = 100;
         let totalMined = 0;
+        let prestigeLevel = 1;
         
-        // Открытые шахты (каждая даёт множитель ценности)
-        let unlockedMines = {
-            forest: true,   // лесная (стартовая)
-            stone: false,   // каменистая
-            coal: false,
-            gold: false,
-            diamond: false,
-            netherite: false
-        };
-        
-        // Стоимость открытия шахт
-        const minePrices = {
-            stone: 500,
-            coal: 1500,
-            gold: 5000,
-            diamond: 20000,
-            netherite: 75000
-        };
-        
-        // Множители ценности от шахт
-        const mineMultipliers = {
-            forest: 1.0,
-            stone: 1.3,
-            coal: 1.7,
-            gold: 2.5,
-            diamond: 4.0,
-            netherite: 7.0
-        };
-        
-        // Улучшения
-        let pickaxePower = 1;     // урон по блоку
-        let rareChanceBonus = 0;  // +шанс найти редкую руду
+        let pickaxePower = 1;
+        let rareChanceBonus = 0;
         let coinMultiplier = 1.0;
         
-        // Анимация треска
-        let crackAnim = { active: false, x: 0, y: 0, stage: 0, particles: [], blockId: null };
-        let canMine = true;
+        let autoFarmActive = false;
+        let autoFarmInterval = null;
         
-        // Всплывающие монеты
+        // Открытые шахты
+        let unlockedMines = {
+            forest: true, stone: false, coal: false, gold: false, diamond: false, netherite: false
+        };
+        
+        const minePrices = {
+            stone: 500, coal: 1500, gold: 5000, diamond: 20000, netherite: 75000
+        };
+        
+        const mineMultipliers = {
+            forest: 1.0, stone: 1.3, coal: 1.7, gold: 2.5, diamond: 4.0, netherite: 7.0
+        };
+        
+        // Цены уровней (престиж)
+        const levelPrices = {
+            2: 1000, 3: 3000, 4: 8000, 5: 20000, 6: 50000, 7: 100000, 8: 200000, 9: 400000, 10: 800000
+        };
+        
+        // Анимация
+        let crackAnim = { active: false, x: 0, y: 0, stage: 0, particles: [] };
+        let canMine = true;
         let floatingTexts = [];
         
-        // ----- ТИПЫ БЛОКОВ (с ценностью) -----
+        // Блоки
         const BLOCKS = {
             AIR: { id: 0, name: "воздух", color: null, solid: false, baseValue: 0 },
             DIRT: { id: 1, name: "земля", color: "#8B5A2B", dark: "#7B4A1B", solid: true, baseValue: 2 },
@@ -268,12 +236,9 @@
             NETHERITE: { id: 9, name: "незерит", color: "#4a2a3a", dark: "#2a1a2a", solid: true, baseValue: 350 }
         };
         
-        // Генерация блока с учётом глубины и открытых шахт
         function generateBlockAt(x, y) {
             let depth = y;
             let r = Math.random() * 100 + rareChanceBonus;
-            
-            // Незерит (очень глубоко)
             if(depth > 70 && r < 3) return BLOCKS.NETHERITE;
             if(depth > 40 && r < 6) return BLOCKS.DIAMOND;
             if(depth > 35 && r < 9) return BLOCKS.EMERALD;
@@ -294,31 +259,26 @@
         }
         
         function setBlock(x, y, block) {
-            let key = `${x},${y}`;
-            world.set(key, block);
+            world.set(`${x},${y}`, block);
         }
         
-        // Получить текущий множитель ценности
         function getCurrentValueMultiplier() {
-            let depth = playerDepth;
             let multiplier = 1.0;
-            if(unlockedMines.netherite && depth > 60) multiplier = Math.max(multiplier, mineMultipliers.netherite);
-            else if(unlockedMines.diamond && depth > 35) multiplier = Math.max(multiplier, mineMultipliers.diamond);
-            else if(unlockedMines.gold && depth > 22) multiplier = Math.max(multiplier, mineMultipliers.gold);
-            else if(unlockedMines.coal && depth > 10) multiplier = Math.max(multiplier, mineMultipliers.coal);
-            else if(unlockedMines.stone && depth > 5) multiplier = Math.max(multiplier, mineMultipliers.stone);
+            if(unlockedMines.netherite && playerDepth > 60) multiplier = Math.max(multiplier, mineMultipliers.netherite);
+            else if(unlockedMines.diamond && playerDepth > 35) multiplier = Math.max(multiplier, mineMultipliers.diamond);
+            else if(unlockedMines.gold && playerDepth > 22) multiplier = Math.max(multiplier, mineMultipliers.gold);
+            else if(unlockedMines.coal && playerDepth > 10) multiplier = Math.max(multiplier, mineMultipliers.coal);
+            else if(unlockedMines.stone && playerDepth > 5) multiplier = Math.max(multiplier, mineMultipliers.stone);
             else multiplier = mineMultipliers.forest;
-            return multiplier * coinMultiplier;
+            return multiplier * coinMultiplier * (1 + prestigeLevel * 0.1);
         }
         
-        // Копание блока
         function mineBlockAt(blockX, blockY) {
             if(!canMine) return false;
             let block = getBlock(blockX, blockY);
             if(block.id === 0) return false;
             
             canMine = false;
-            // Запускаем анимацию треска
             crackAnim.active = true;
             crackAnim.x = blockX;
             crackAnim.y = blockY;
@@ -358,7 +318,6 @@
             floatingTexts.push({ text: text, x: bx, y: by, life: 35 });
         }
         
-        // Листание глубины
         function scrollDepth(delta) {
             let newDepth = playerDepth + delta;
             if(newDepth < 0) newDepth = 0;
@@ -369,7 +328,21 @@
             updateUI();
         }
         
-        // Открытие новой шахты
+        function upgradePrestige() {
+            let nextLevel = prestigeLevel + 1;
+            let price = levelPrices[nextLevel] || (nextLevel * 50000);
+            if(coins >= price) {
+                coins -= price;
+                prestigeLevel = nextLevel;
+                coinMultiplier = 1 + prestigeLevel * 0.1;
+                saveGame();
+                updateUI();
+                showFloatingText(`🏆 УРОВЕНЬ ${prestigeLevel}! Множитель x${coinMultiplier.toFixed(1)}`, 5, playerDepth);
+                return true;
+            }
+            return false;
+        }
+        
         function unlockMine(mineId) {
             let price = minePrices[mineId];
             if(coins >= price && !unlockedMines[mineId]) {
@@ -383,35 +356,59 @@
             return false;
         }
         
-        // Магазин
         function openShop() {
-            let msg = "🏪 МАГАЗИН ШАХТЁРА\n\n";
-            msg += `💰 Монет: ${Math.floor(coins)}\n`;
-            msg += `⛏️ Сила кирки: ${pickaxePower} (+10 монет за улучшение)\n`;
-            msg += `🍀 Шанс редкости: +${rareChanceBonus}% (50 монет)\n`;
-            if(!unlockedMines.stone) msg += `\n🔹 КАМЕННАЯ ШАХТА - 500 🪙 (множитель x1.3)`;
-            if(!unlockedMines.coal) msg += `\n⚫ УГОЛЬНАЯ ШАХТА - 1500 🪙 (x1.7)`;
-            if(!unlockedMines.gold) msg += `\n🟡 ЗОЛОТАЯ ШАХТА - 5000 🪙 (x2.5)`;
-            if(!unlockedMines.diamond) msg += `\n💎 АЛМАЗНАЯ ШАХТА - 20000 🪙 (x4.0)`;
-            if(!unlockedMines.netherite) msg += `\n🔥 НЕЗЕРИТОВАЯ ШАХТА - 75000 🪙 (x7.0)`;
-            msg += `\n\nНажмите на кнопку шахты, которую хотите открыть.`;
-            let action = prompt(msg + "\n\nВведите название шахты (stone, coal, gold, diamond, netherite) или upgrade_pick, upgrade_luck:");
-            if(action === "upgrade_pick" && coins >= 10) { coins -= 10; pickaxePower++; saveGame(); updateUI(); alert("Кирка улучшена!"); }
-            else if(action === "upgrade_luck" && coins >= 50) { coins -= 50; rareChanceBonus += 3; saveGame(); updateUI(); alert("Шанс редкости +3%"); }
-            else if(action === "stone") unlockMine("stone");
-            else if(action === "coal") unlockMine("coal");
-            else if(action === "gold") unlockMine("gold");
-            else if(action === "diamond") unlockMine("diamond");
-            else if(action === "netherite") unlockMine("netherite");
-            else alert("Неверная команда или недостаточно монет");
+            let modal = document.getElementById('shopModal');
+            if(!modal) {
+                modal = document.createElement('div');
+                modal.id = 'shopModal';
+                modal.className = 'modal';
+                document.body.appendChild(modal);
+            }
+            
+            let html = `<div class="modal-content"><span class="close" onclick="document.getElementById('shopModal').style.display='none'">&times;</span>
+                <h2>🏪 МАГАЗИН</h2>
+                <p>💰 Монет: ${Math.floor(coins)}</p>
+                <p>🏆 Уровень: ${prestigeLevel} (множитель x${coinMultiplier.toFixed(1)})</p>
+                <hr>
+                <h3>🏆 ПОВЫСИТЬ УРОВЕНЬ</h3>
+                <button onclick="upgradePrestigeWrapper()">УРОВЕНЬ ${prestigeLevel+1} - ${levelPrices[prestigeLevel+1] || (prestigeLevel+1)*50000} 🪙</button>
+                <hr>
+                <h3>⛏️ ОТКРЫТЬ ШАХТЫ</h3>`;
+            
+            if(!unlockedMines.stone) html += `<button onclick="unlockMineWrapper('stone')">🪨 КАМЕННАЯ - ${minePrices.stone} 🪙 (x1.3)</button>`;
+            if(!unlockedMines.coal) html += `<button onclick="unlockMineWrapper('coal')">⚫ УГОЛЬНАЯ - ${minePrices.coal} 🪙 (x1.7)</button>`;
+            if(!unlockedMines.gold) html += `<button onclick="unlockMineWrapper('gold')">🟡 ЗОЛОТАЯ - ${minePrices.gold} 🪙 (x2.5)</button>`;
+            if(!unlockedMines.diamond) html += `<button onclick="unlockMineWrapper('diamond')">💎 АЛМАЗНАЯ - ${minePrices.diamond} 🪙 (x4.0)</button>`;
+            if(!unlockedMines.netherite) html += `<button onclick="unlockMineWrapper('netherite')">🔥 НЕЗЕРИТОВАЯ - ${minePrices.netherite} 🪙 (x7.0)</button>`;
+            
+            html += `</div>`;
+            modal.innerHTML = html;
+            modal.style.display = 'flex';
         }
         
-        // Сохранение/загрузка
+        window.upgradePrestigeWrapper = () => { upgradePrestige(); openShop(); };
+        window.unlockMineWrapper = (mine) => { unlockMine(mine); openShop(); };
+        
+        function startAutoFarm() {
+            if(autoFarmInterval) clearInterval(autoFarmInterval);
+            autoFarmActive = true;
+            autoFarmInterval = setInterval(() => {
+                let centerX = 5;
+                let centerY = cameraDepth + 5;
+                mineBlockAt(centerX, centerY);
+                if(Math.random() < 0.3) scrollDepth(1);
+                if(coins >= (levelPrices[prestigeLevel+1] || 999999)) upgradePrestige();
+            }, 500);
+        }
+        
+        function stopAutoFarm() {
+            if(autoFarmInterval) clearInterval(autoFarmInterval);
+            autoFarmActive = false;
+            autoFarmInterval = null;
+        }
+        
         function saveGame() {
-            let save = {
-                coins, totalMined, playerDepth, pickaxePower, rareChanceBonus,
-                unlockedMines, coinMultiplier
-            };
+            let save = { coins, totalMined, playerDepth, prestigeLevel, pickaxePower, rareChanceBonus, unlockedMines, coinMultiplier };
             localStorage.setItem("mineSaver", JSON.stringify(save));
         }
         
@@ -422,43 +419,42 @@
                 coins = data.coins;
                 totalMined = data.totalMined;
                 playerDepth = data.playerDepth;
-                pickaxePower = data.pickaxePower;
-                rareChanceBonus = data.rareChanceBonus;
-                unlockedMines = data.unlockedMines;
-                coinMultiplier = data.coinMultiplier;
+                prestigeLevel = data.prestigeLevel || 1;
+                pickaxePower = data.pickaxePower || 1;
+                rareChanceBonus = data.rareChanceBonus || 0;
+                unlockedMines = data.unlockedMines || { forest: true, stone: false, coal: false, gold: false, diamond: false, netherite: false };
+                coinMultiplier = data.coinMultiplier || 1 + prestigeLevel * 0.1;
                 cameraDepth = playerDepth - 5;
                 if(cameraDepth < 0) cameraDepth = 0;
             } else {
                 coins = 100;
-                totalMined = 0;
+                prestigeLevel = 1;
                 playerDepth = 15;
-                pickaxePower = 1;
-                rareChanceBonus = 0;
-                unlockedMines = { forest: true, stone: false, coal: false, gold: false, diamond: false, netherite: false };
-                coinMultiplier = 1.0;
                 cameraDepth = 10;
+                coinMultiplier = 1.1;
             }
             updateUI();
         }
         
         function resetGame() {
-            localStorage.removeItem("mineSaver");
-            world.clear();
-            coins = 100;
-            totalMined = 0;
-            playerDepth = 15;
-            pickaxePower = 1;
-            rareChanceBonus = 0;
-            unlockedMines = { forest: true, stone: false, coal: false, gold: false, diamond: false, netherite: false };
-            coinMultiplier = 1.0;
-            cameraDepth = 10;
-            updateUI();
-            showFloatingText("НОВАЯ ШАХТА!", 5, playerDepth);
+            if(confirm("Сбросить игру? Всё пропадёт!")) {
+                localStorage.removeItem("mineSaver");
+                world.clear();
+                coins = 100;
+                prestigeLevel = 1;
+                playerDepth = 15;
+                coinMultiplier = 1.1;
+                unlockedMines = { forest: true, stone: false, coal: false, gold: false, diamond: false, netherite: false };
+                cameraDepth = 10;
+                updateUI();
+                showFloatingText("НОВАЯ ШАХТА!", 5, playerDepth);
+            }
         }
         
         function updateUI() {
             document.getElementById('coinDisplay').innerText = Math.floor(coins);
             document.getElementById('depthDisplay').innerText = playerDepth;
+            document.getElementById('levelDisplay').innerText = prestigeLevel;
             let biome = "🌿 ЛЕСНАЯ";
             if(playerDepth > 60 && unlockedMines.netherite) biome = "🔥 НЕЗЕРИТОВАЯ";
             else if(playerDepth > 35 && unlockedMines.diamond) biome = "💎 АЛМАЗНАЯ";
@@ -468,16 +464,52 @@
             document.getElementById('biomeBadge').innerHTML = biome;
         }
         
-        // Отрисовка
+        // API обработка
+        function handleAPI() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            const action = params.get('action');
+            const data = params.get('data');
+            
+            if(key && key === SECRET_KEY) {
+                if(action === 'admin') {
+                    document.body.innerHTML += `<div style="position:fixed;top:20px;right:20px;background:#000;color:#0f0;padding:20px;z-index:9999;border-radius:10px;">
+                        <h2>👑 АДМИН-ПАНЕЛЬ</h2>
+                        <button onclick="startAutoFarm()">🤖 ВКЛЮЧИТЬ АВТО-ФЕРМУ</button>
+                        <button onclick="stopAutoFarm()">⏹️ ОСТАНОВИТЬ</button>
+                        <button onclick="addCoins(10000)">💰 +10000 МОНЕТ</button>
+                        <button onclick="upgradePrestige()">🏆 +1 УРОВЕНЬ</button>
+                        <button onclick="location.href='.'">❌ ЗАКРЫТЬ</button>
+                    </div>`;
+                }
+                if(action === 'auto_farm') startAutoFarm();
+                if(action === 'stop_auto') stopAutoFarm();
+                if(action === 'add_coins' && data) {
+                    let d = JSON.parse(atob(data));
+                    coins += d.amount;
+                    saveGame();
+                    updateUI();
+                }
+                if(action === 'set_level' && data) {
+                    let d = JSON.parse(atob(data));
+                    prestigeLevel = d.level;
+                    coinMultiplier = 1 + prestigeLevel * 0.1;
+                    saveGame();
+                    updateUI();
+                }
+            }
+        }
+        
+        window.addCoins = (amount) => { coins += amount; saveGame(); updateUI(); };
+        window.startAutoFarm = startAutoFarm;
+        window.stopAutoFarm = stopAutoFarm;
+        
         function draw() {
             ctx.clearRect(0, 0, size, size);
             let startX = 0;
             let startY = cameraDepth;
-            let endX = startX + 10;
-            let endY = startY + 10;
-            
-            for(let x = startX; x < endX; x++) {
-                for(let y = startY; y < endY; y++) {
+            for(let x = startX; x < startX + 10; x++) {
+                for(let y = startY; y < startY + 10; y++) {
                     let block = getBlock(x, y);
                     if(block.id !== 0) {
                         let screenX = (x - startX) * BLOCK_SIZE;
@@ -491,8 +523,6 @@
                     }
                 }
             }
-            
-            // Анимация треска
             if(crackAnim.active) {
                 let bx = crackAnim.x;
                 let by = crackAnim.y;
@@ -503,34 +533,21 @@
                 ctx.fillStyle = "#ffaa44";
                 ctx.font = "bold 26px monospace";
                 ctx.fillText("💥", screenX+12, screenY+32);
-                for(let p of crackAnim.particles) {
-                    ctx.fillStyle = `rgba(200,100,50,${p.life/20})`;
-                    ctx.fillRect(screenX + p.x, screenY + p.y, 4, 4);
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.life--;
-                }
             }
-            
-            // Тексты монет
-            for(let i=0;i<floatingTexts.length;i++) {
-                let t = floatingTexts[i];
+            for(let t of floatingTexts) {
                 let tx = (t.x - 0) * BLOCK_SIZE + 20;
                 let ty = (t.y - cameraDepth) * BLOCK_SIZE - t.life/2;
                 ctx.font = "bold 16px monospace";
                 ctx.fillStyle = `rgba(255, 220, 0, ${t.life/30})`;
                 ctx.fillText(t.text, tx, ty);
                 t.life -= 2;
-                if(t.life <= 0) floatingTexts.splice(i,1);
             }
-            
-            // Курсор
+            floatingTexts = floatingTexts.filter(t => t.life > 0);
             ctx.strokeStyle = "#ffdd88";
             ctx.lineWidth = 3;
             ctx.strokeRect(size/2 - BLOCK_SIZE/2, size/2 - BLOCK_SIZE/2, BLOCK_SIZE, BLOCK_SIZE);
         }
         
-        // Обработка клика по блоку
         function handleCanvasTap(e) {
             const rect = canvas.getBoundingClientRect();
             const scale = canvas.width / rect.width;
@@ -538,9 +555,7 @@
             let touchY = (e.clientY - rect.top) * scale;
             let blockCol = Math.floor(touchX / BLOCK_SIZE);
             let blockRow = Math.floor(touchY / BLOCK_SIZE);
-            let targetX = blockCol;
-            let targetY = cameraDepth + blockRow;
-            mineBlockAt(targetX, targetY);
+            mineBlockAt(blockCol, cameraDepth + blockRow);
         }
         
         canvas.addEventListener('click', handleCanvasTap);
@@ -553,11 +568,9 @@
         
         loadGame();
         setInterval(() => saveGame(), 30000);
+        handleAPI();
         
-        function animate() {
-            draw();
-            requestAnimationFrame(animate);
-        }
+        function animate() { draw(); requestAnimationFrame(animate); }
         animate();
     })();
 </script>
